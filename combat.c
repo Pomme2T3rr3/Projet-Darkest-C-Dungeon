@@ -16,50 +16,7 @@ Classe creerClasse(const char* nom, int att, int def, int HPmax, int rest) {
     return c;
 }
 
-Accessoire creerAccessoire(const char* nom, const char* attbonus, const char* defbonus, const char* HPbonus, const char* restbonus, int strred) {
-    Accessoire acc;
-    strcpy(acc.nom, nom);
-    strcpy(acc.attbonus, attbonus);
-    strcpy(acc.defbonus, defbonus);
-    strcpy(acc.HPbonus, HPbonus);
-    strcpy(acc.restbonus, restbonus);
-    acc.strred = strred;
-    return acc;
-}
 
-void ajoutAcc(ListeAcc* liste, Accessoire acc) {
-    celluleAcc* tmp = (celluleAcc*)malloc(sizeof(celluleAcc));
-    if (tmp != NULL) {
-        tmp->acc = acc;
-        tmp->suivant = *liste;
-        *liste = tmp;
-    }
-}
-
-void afficherAccessoire(Accessoire acc) {
-    printf("   <-%s->\n", acc.nom);
-    printf("______________________________\n");
-    printf(" attbonus: %s\n", acc.attbonus);
-    printf("------------------------------\n");
-    printf(" defbonus: %s\n", acc.defbonus);
-    printf("------------------------------\n");
-    printf(" HPbonus: %s\n", acc.HPbonus);
-    printf("------------------------------\n");
-    printf(" restbonus: %s\n", acc.restbonus);
-    printf("------------------------------\n");
-    printf(" strred: %d\n", acc.strred);
-    printf("______________________________\n");
-    printf("\n");
-    printf("\n");
-}
-
-void afficherDispoAcc(ListeAcc liste) {
-    celluleAcc* courant = liste;
-    while (courant != NULL) {
-        afficherAccessoire(courant->acc);
-        courant = courant->suivant;
-    }
-}
 
 Personnage creerPersonnage(const char* nom, Classe classe, Accessoire* acc1, Accessoire* acc2) {
     Personnage perso;
@@ -171,15 +128,6 @@ Ennemi creerEnnemi(const char* nom, int niveau, int attenn, int defenn, int HPen
 }
 
 
-int indiceDejaSelectionne(int* indices, int taille, int indice) {
-    for (int i = 0; i < taille; i++) {
-        if (indices[i] == indice) {
-            return 1;
-        }
-    }
-    return 0;
-}
-
 
 void MiseEnPlaceCombat(ListePerso listeP, ListeCombattant* listeC, int nbCombats) {
 
@@ -229,79 +177,4 @@ void MiseEnPlaceCombat(ListePerso listeP, ListeCombattant* listeC, int nbCombats
 
     printf("Combat préparé avec les combattants suivants :\n");
     afficherCombattants(*listeC);
-}
-
-
-
-void ajoutSanitarium(ListeSanitarium* liste, ListePerso* dispo, Personnage perso) {
-    celluleSanitarium* tmp = (celluleSanitarium*)malloc(sizeof(celluleSanitarium));
-    if (tmp != NULL) {
-        tmp->perso = perso;
-        tmp->suivant = *liste;
-        *liste = tmp;
-
-        // Retirer perso
-        retirerPerso(dispo, perso);
-    }
-    return;
-}
-
-
-void recupererationHP(ListeSanitarium* liste) {
-    celluleSanitarium* courant = *liste;
-    while (courant != NULL) {
-        courant->perso.HP += 7;
-        if (courant->perso.HP > courant->perso.HPmax) {
-            courant->perso.HP = courant->perso.HPmax;
-        }
-        courant = courant->suivant;
-    }
-}
-
-
-void afficherSanitarium(ListeSanitarium liste) {
-    int index = 1;
-    celluleSanitarium* courant = liste;
-
-    printf("Sanitarium\n");
-    printf("-------------------------------------------------\n");
-    printf(" N° | Nom      | Classe          | att | def | HP/HPmax | rest | str \n");
-    printf("-------------------------------------------------\n");
-    while (courant != NULL) {
-        printf(" %2d | %-8s | %-15s | %-3d | %-3d | %-8d/%-8d | %-4d | %-3d\n",
-               index, courant->perso.nom, courant->perso.classe, courant->perso.att,
-               courant->perso.def, courant->perso.HP, courant->perso.HPmax,
-               courant->perso.rest, courant->perso.str);
-        courant = courant->suivant;
-        index++;
-    }
-    printf("-------------------------------------------------\n");
-}
-
-
-void retirerDuSanitarium(ListeSanitarium* sanitarium, ListePerso* dispoPerso) {
-    celluleSanitarium* courant = *sanitarium;
-    celluleSanitarium* precedent = NULL;
-
-    while (courant != NULL) {
-        printf("Voulez-vous faire sortir %s du sanitarium ? (Y/N): ", courant->perso.nom);
-        char choix;
-        scanf(" %c", &choix);
-
-        if (choix == 'Y' || choix == 'y') {
-            if (precedent == NULL) {
-                *sanitarium = courant->suivant;
-            } else {
-                precedent->suivant = courant->suivant;
-            }
-
-            ajoutPerso(dispoPerso, courant->perso);
-
-            free(courant);
-            courant = (precedent == NULL) ? *sanitarium : precedent->suivant;
-        } else {
-            precedent = courant;
-            courant = courant->suivant;
-        }
-    }
 }
