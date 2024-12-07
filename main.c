@@ -54,6 +54,10 @@ typedef struct cellulePerso {
     struct cellulePerso* suivant;
 } cellulePerso, *ListePerso;
 
+typedef struct celluleCombattant {
+    Personnage perso;
+    struct celluleCombattant* suivant;
+} celluleCombattant, *ListeCombattant;
 
 typedef struct celluleSanitarium {
     Personnage perso;
@@ -142,6 +146,12 @@ void ajoutPerso(ListePerso* liste, Personnage perso) {
     }
 }
 
+void ajoutCombattant(ListeCombattant* listeC, Personnage perso) {
+    celluleCombattant* nouveau = (celluleCombattant*)malloc(sizeof(celluleCombattant));
+    nouveau->perso = perso;
+    nouveau->suivant = *listeC;
+    *listeC = nouveau;
+}
 
 void retirerPerso(ListePerso *liste, Personnage perso) {
     cellulePerso *courant = *liste;
@@ -198,6 +208,16 @@ void afficherDispoPerso(ListePerso liste) {
     }
 }
 
+
+void afficherCombattants(ListeCombattant listeC) {
+    celluleCombattant* courant = listeC;
+    while (courant != NULL) {
+        afficherPersonnage(courant->perso);
+        courant = courant->suivant;
+    }
+}
+
+
 Ennemi creerEnnemi(const char* nom, int niveau, int attenn, int defenn, int HPenn, int attstrenn) {
     Ennemi enn;
     strcpy(enn.nom, nom);
@@ -210,24 +230,6 @@ Ennemi creerEnnemi(const char* nom, int niveau, int attenn, int defenn, int HPen
 }
 
 
-void MiseEnPlaceCombat(ListePerso listeP, ListeAcc listA, int nbCombats) {
-    afficherDispoPerso(listeP);
-
-    int combattant;
-
-    if (nbCombats <= 5) {
-        for (int i; i<3; i++) {
-            printf("Choix du combattant %d :", i);
-            scanf("%d", &combattant);
-
-            if (combattant == 0)
-                break;
-        }
-    }
-
-}
-
-
 int indiceDejaSelectionne(int* indices, int taille, int indice) {
     for (int i = 0; i < taille; i++) {
         if (indices[i] == indice) {
@@ -236,6 +238,59 @@ int indiceDejaSelectionne(int* indices, int taille, int indice) {
     }
     return 0;
 }
+
+
+void MiseEnPlaceCombat(ListePerso listeP, ListeCombattant* listeC, int nbCombats) {
+
+    afficherDispoPerso(listeP);
+
+    int maxCombattants = (nbCombats <= 5) ? 2 : 3;
+    int nbSelectionnes = 0;
+    int indicesSelectionnes[maxCombattants];
+    memset(indicesSelectionnes, -1, sizeof(indicesSelectionnes));
+
+    while (nbSelectionnes < maxCombattants) {
+        printf("Choix du combattant %d (entrez un numéro ou N pour terminer) : ", nbSelectionnes + 1);
+        char choix[10];
+        scanf("%s", choix);
+
+        if (strcmp(choix, "N") == 0 || strcmp(choix, "n") == 0) {
+            if (nbSelectionnes == 0) {
+                printf("Vous devez sélectionner au moins un combattant\n");
+                continue;
+            }
+            break;
+        }
+
+        int indice = atoi(choix);
+        if (indice <= 0) {
+            printf("Choix invalide. Veuillez réessayer.\n");
+            continue;
+        }
+
+        cellulePerso* courant = listeP;
+        int position = 1;
+        while (courant != NULL && position < indice) {
+            courant = courant->suivant;
+            position++;
+        }
+
+        if (courant == NULL || indiceDejaSelectionne(indicesSelectionnes, nbSelectionnes, indice)) {
+            printf("Personnage non disponible ou déjà sélectionné. Veuillez réessayer.\n");
+            continue;
+        }
+
+        // Ajouter le personnage à la liste des combattants
+        ajoutCombattant(listeC, courant->perso);
+        indicesSelectionnes[nbSelectionnes] = indice;
+        nbSelectionnes++;
+    }
+
+    printf("Combat préparé avec les combattants suivants :\n");
+    afficherCombattants(*listeC);
+}
+
+
 
 void ajoutSanitarium(ListeSanitarium* liste, ListePerso* dispo, Personnage perso) {
     celluleSanitarium* tmp = (celluleSanitarium*)malloc(sizeof(celluleSanitarium));
@@ -319,6 +374,7 @@ int main() {
 
     // innitialisation des listes chaines
     ListePerso dispoPerso = NULL;
+    ListeCombattant listeC = NULL;
     ListeAcc dispoAcc = NULL;
     ListeSanitarium sanitarium = NULL;
 
@@ -388,7 +444,8 @@ int main() {
     afficherDispoPerso(dispoPerso); */
 
     // test mise en place combat
-    MiseEnPlaceCombat(dispoPerso, dispoAcc, nbcombat);
+    printf("Mise en place du combat :\n");
+    MiseEnPlaceCombat(dispoPerso, &listeC, nbcombat);
 
 
 
