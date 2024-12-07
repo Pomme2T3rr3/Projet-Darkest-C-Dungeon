@@ -2,7 +2,7 @@
 
 
 ## Combats
-- [ ] Fonction MiseEnPlace (Liste chaînées ListeCombattants)
+- [x] Fonction MiseEnPlace (Liste chaînées ListeCombattants)
 - [ ] Fonction DeroulementCombat/ActionPerso/Action Ennemi
 - [ ] Fin Combat
 
