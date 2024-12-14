@@ -21,6 +21,7 @@ typedef struct Accessoire {
 } Accessoire;
 
 typedef struct Personnage {
+    int num;
     char nom[50];
     char classe[50];
     int att;
@@ -30,8 +31,8 @@ typedef struct Personnage {
     int rest;
     int str;
     int nbcomb;
-    char acc_1[50];
-    char acc_2[50];
+    Accessoire *acc_1;
+    Accessoire *acc_2;
 } Personnage;
 
 typedef struct Ennemi {
@@ -63,6 +64,11 @@ typedef struct celluleSanitarium {
     Personnage perso;
     struct celluleSanitarium* suivant;
 } celluleSanitarium, *ListeSanitarium;
+
+typedef struct celluleTaverne {
+    Personnage perso;
+    struct celluleTaverne* suivant;
+} celluleTaverne, *ListeTaverne;
 
 
 Classe creerClasse(const char* nom, int att, int def, int HPmax, int rest) {
@@ -120,8 +126,9 @@ void afficherDispoAcc(ListeAcc liste) {
     }
 }
 
-Personnage creerPersonnage(const char* nom, Classe classe, Accessoire* acc1, Accessoire* acc2) {
+Personnage creerPersonnage(int num, const char* nom, Classe classe, Accessoire* acc1, Accessoire* acc2) {
     Personnage perso;
+    perso.num = num;
     strcpy(perso.nom, nom);
     strcpy(perso.classe, classe.nom);
     perso.att = classe.att;
@@ -131,8 +138,8 @@ Personnage creerPersonnage(const char* nom, Classe classe, Accessoire* acc1, Acc
     perso.rest = classe.rest;
     perso.str = 0;
     perso.nbcomb = 0;
-    strcpy(perso.acc_1, acc1 ? acc1->nom : "");
-    strcpy(perso.acc_2, acc2 ? acc2->nom : "");
+    perso.acc_1 = acc1; 
+    perso.acc_2 = acc2;
     return perso;
 }
 
@@ -178,6 +185,8 @@ void retirerPerso(ListePerso *liste, Personnage perso) {
 void afficherPersonnage(Personnage perso) {
     printf("          <-%s->\n", perso.nom);
     printf("______________________________\n");
+    printf(" num: %d\n", perso.num);
+    printf("------------------------------\n");
     printf(" Classe: %s\n", perso.classe);
     printf("------------------------------\n");
     printf(" att: %d\n", perso.att);
@@ -192,9 +201,9 @@ void afficherPersonnage(Personnage perso) {
     printf("------------------------------\n");
     printf(" nbcomb: %d\n", perso.nbcomb);
     printf("------------------------------\n");
-    printf(" acc 1: %s\n", strcmp(perso.acc_1, "") == 0 ? "Aucun" : perso.acc_1);
+    printf(" acc 1: %s\n", perso.acc_1 == NULL ? "Aucun" : perso.acc_1->nom);
     printf("------------------------------\n");
-    printf(" acc 2: %s\n", strcmp(perso.acc_2, "") == 0 ? "Aucun" : perso.acc_2);
+    printf(" acc 2: %s\n", perso.acc_2 == NULL ? "Aucun" : perso.acc_2->nom);
     printf("______________________________\n");
     printf("\n");
     printf("\n");
@@ -240,8 +249,147 @@ int indiceDejaSelectionne(int* indices, int taille, int indice) {
 }
 
 
-void MiseEnPlaceCombat(ListePerso listeP, ListeCombattant* listeC, int nbCombats) {
+void actionsPerso(ListeCombattant listeC, Ennemi* enn) {
 
+    celluleCombattant* courant = listeC;
+    while (courant != NULL) {
+        printf("Action de %s, A : Attaque, D : Defendre, R : Restaurer. ", courant->perso.nom);
+        char action;
+        scanf(" %c", &action); 
+
+        int bonusAttaque = 0, bonusDefense = 0, bonusRestauration = 0;
+
+        if (courant->perso.acc_1 != NULL) {
+            bonusAttaque += atoi(courant->perso.acc_1->attbonus);
+            bonusDefense += atoi(courant->perso.acc_1->defbonus);
+            bonusRestauration += atoi(courant->perso.acc_1->restbonus);
+        }
+
+        if (courant->perso.acc_2 != NULL) {
+            bonusAttaque += atoi(courant->perso.acc_2->attbonus);
+            bonusDefense += atoi(courant->perso.acc_2->defbonus);
+            bonusRestauration += atoi(courant->perso.acc_2->restbonus);
+        }
+
+        if (action == 'A') {
+
+            int attTotal = courant->perso.att + bonusAttaque;
+            float roll = 0.8 + ((float)rand() / (float)RAND_MAX) * (1.2 - 0.8); 
+            int dommages = attTotal > enn->defenn ? (attTotal - enn->defenn) * roll : 1;
+
+            enn->HPenn -= dommages;
+            printf("%s attaque et inflige %d dégâts. %s a %d HP restants.\n", courant->perso.nom, dommages, enn->nom, enn->HPenn);
+
+        } else if (action == 'D') {
+            courant->perso.def += courant->perso.def * 0.1; 
+            printf("%s défend. Défense augmentée pour ce tour.\n", courant->perso.nom);
+
+        } else if (action == 'R') {
+            printf("Quel personnage voulez-vous restaurer (1, 2, 3...) ? ");
+            int cible;
+            scanf("%d", &cible);
+
+            celluleCombattant* ciblePerso = listeC;
+            for (int i = 1; ciblePerso != NULL && i < cible; i++) {
+                ciblePerso = ciblePerso->suivant;
+            }
+            if (ciblePerso != NULL) {
+                int restauration = courant->perso.rest + bonusRestauration;
+                ciblePerso->perso.HP = (ciblePerso->perso.HP + restauration > ciblePerso->perso.HPmax)
+                                           ? ciblePerso->perso.HPmax
+                                           : ciblePerso->perso.HP + restauration;
+                printf("%s restaure %d HP pour %s. HP actuel : %d/%d.\n",
+                       courant->perso.nom, restauration, ciblePerso->perso.nom,
+                       ciblePerso->perso.HP, ciblePerso->perso.HPmax);
+            } else {
+                printf("Personnage invalide.\n");
+            }
+        } else {
+            printf("Action invalide, %s passe son tour.\n", courant->perso.nom);
+        }
+        courant = courant->suivant;
+    }
+}
+
+
+void actionEnn(ListeCombattant listeC, Ennemi* enn) {
+    if (listeC == NULL) {
+        printf("Pas de combattants disponibles pour l'ennemi à attaquer.\n");
+        return;
+    }
+
+    int nbCombattants = 0;
+    celluleCombattant* courant = listeC;
+    while (courant != NULL) {
+        nbCombattants++;
+        courant = courant->suivant;
+    }
+
+    int cibleIndex = rand() % nbCombattants;
+    courant = listeC;
+    for (int i = 0; i < cibleIndex; i++) {
+        courant = courant->suivant;
+    }
+
+    int dommage = (enn->attenn - courant->perso.def);
+    if (dommage > 0) {
+        courant->perso.HP -= dommage;
+        printf("L'ennemi %s attaque %s et inflige %d dégâts. %s a maintenant %d/%d HP.\n", enn->nom, courant->perso.nom, dommage, courant->perso.nom, courant->perso.HP, courant->perso.HPmax);
+
+        if (courant->perso.HP <= 0) {
+            printf("%s est tombé au combat !\n", courant->perso.nom);
+        }
+    } else {
+        printf("L'attaque de %s n'a pas pu passer la défense de %s.\n", enn->nom, courant->perso.nom);
+    }
+}
+
+void combat(ListeCombattant* listeC, Ennemi* enn) {
+
+    srand(time(NULL)); 
+    int tour = rand() % 2; 
+
+    while (enn->HPenn > 0 && *listeC != NULL) {
+        if (tour == 0) {
+            printf("\n--- Tour des Personnages ---\n");
+            actionsPerso(*listeC, enn);
+            tour = 1; 
+        } else {
+            printf("\n--- Tour de l'Ennemi ---\n");
+            actionEnn(*listeC, enn);
+            tour = 0; 
+        }
+
+        if (enn->HPenn <= 0) {
+            printf("L'ennemi %s a été vaincu !\n", enn->nom);
+            return;
+        }
+
+        celluleCombattant* courant = *listeC;
+        celluleCombattant* precedent = NULL;
+        while (courant != NULL) {
+            if (courant->perso.HP <= 0) {
+                if (precedent == NULL) {
+                    *listeC = courant->suivant;
+                } else {
+                    precedent->suivant = courant->suivant;
+                }
+                free(courant);
+                courant = (precedent == NULL) ? *listeC : precedent->suivant;
+            } else {
+                precedent = courant;
+                courant = courant->suivant;
+            }
+        }
+    }
+
+    if (*listeC == NULL) {
+        printf("Tous vos personnages ont été vaincus. Défaite...\n");
+    }
+}
+
+
+void MiseEnPlaceCombat(ListePerso listeP, ListeCombattant* listeC, int nbCombats, Ennemi* enn) {
     afficherDispoPerso(listeP);
 
     int maxCombattants = (nbCombats <= 5) ? 2 : 3;
@@ -262,34 +410,40 @@ void MiseEnPlaceCombat(ListePerso listeP, ListeCombattant* listeC, int nbCombats
             break;
         }
 
-        int indice = atoi(choix);
-        if (indice <= 0) {
-            printf("Choix invalide. Veuillez réessayer.\n");
+        int numero = atoi(choix);
+        if (numero <= 0) {
+            printf("Choix invalide. Veuillez entrer un numéro valide.\n");
             continue;
         }
 
         cellulePerso* courant = listeP;
-        int position = 1;
-        while (courant != NULL && position < indice) {
+        while (courant != NULL) {
+            if (courant->perso.num == numero) {
+                if (indiceDejaSelectionne(indicesSelectionnes, nbSelectionnes, numero)) {
+                    printf("Ce personnage est déjà sélectionné. Veuillez en choisir un autre.\n");
+                    courant = NULL; 
+                }
+                break;
+            }
             courant = courant->suivant;
-            position++;
         }
 
-        if (courant == NULL || indiceDejaSelectionne(indicesSelectionnes, nbSelectionnes, indice)) {
-            printf("Personnage non disponible ou déjà sélectionné. Veuillez réessayer.\n");
+        if (courant == NULL) {
+            printf("Numéro non trouvé. Veuillez réessayer.\n");
             continue;
         }
 
-        // Ajouter le personnage à la liste des combattants
         ajoutCombattant(listeC, courant->perso);
-        indicesSelectionnes[nbSelectionnes] = indice;
+        indicesSelectionnes[nbSelectionnes] = numero;
         nbSelectionnes++;
     }
 
     printf("Combat préparé avec les combattants suivants :\n");
+    printf("\n");
     afficherCombattants(*listeC);
+    printf("\n");
+    combat(listeC, enn);
 }
-
 
 
 void ajoutSanitarium(ListeSanitarium* liste, ListePerso* dispo, Personnage perso) {
@@ -365,6 +519,25 @@ void retirerDuSanitarium(ListeSanitarium* sanitarium, ListePerso* dispoPerso) {
     }
 }
 
+void afficherTaverne(ListeTaverne liste) {
+    int index = 1;
+    celluleTaverne* courant = liste;
+
+    printf("Taverne\n");
+    printf("-------------------------------------------------\n");
+    printf(" N° | Nom      | Classe          | att | def | HP/HPmax | rest | str \n");
+    printf("-------------------------------------------------\n");
+    while (courant != NULL) {
+        printf(" %2d | %-8s | %-15s | %-3d | %-3d | %-8d/%-8d | %-4d | %-3d\n",
+               index, courant->perso.nom, courant->perso.classe, courant->perso.att,
+               courant->perso.def, courant->perso.HP, courant->perso.HPmax,
+               courant->perso.rest, courant->perso.str);
+        courant = courant->suivant;
+        index++;
+    }
+    printf("-------------------------------------------------\n");
+}
+
 
 int main() {
 
@@ -377,6 +550,7 @@ int main() {
     ListeCombattant listeC = NULL;
     ListeAcc dispoAcc = NULL;
     ListeSanitarium sanitarium = NULL;
+    ListeTaverne taverne = NULL;
 
     // création des classes
     Classe classes[] = {
@@ -403,12 +577,12 @@ int main() {
     Accessoire calice_de_jeunesse = creerAccessoire("calice_de_jeunesse", "+0", "+3", "+5", "+0", 5);
 
     // création des personnages
-    Personnage Boudicca = creerPersonnage("Boudicca", classes[indicesSelectionnes[0]], NULL, NULL);
-    Personnage Junia = creerPersonnage("Junia", classes[indicesSelectionnes[1]], NULL, NULL);
-    Personnage Flash = creerPersonnage("Flash", classes[indicesSelectionnes[2]], NULL, NULL);
-    Personnage Gordi = creerPersonnage("Gordi", classes[indicesSelectionnes[3]], NULL, NULL);
-    Personnage Tritus = creerPersonnage("Tritus", classes[indicesSelectionnes[2]], NULL, NULL);
-    Personnage Ragnard = creerPersonnage("Ragnard", classes[indicesSelectionnes[0]], NULL, NULL);
+    Personnage Boudicca = creerPersonnage(6, "Boudicca", classes[indicesSelectionnes[0]], NULL, NULL);
+    Personnage Junia = creerPersonnage(5, "Junia", classes[indicesSelectionnes[1]], NULL, NULL);
+    Personnage Flash = creerPersonnage(4, "Flash", classes[indicesSelectionnes[2]], NULL, NULL);
+    Personnage Gordi = creerPersonnage(3, "Gordi", classes[indicesSelectionnes[3]], NULL, NULL);
+    Personnage Tritus = creerPersonnage(2, "Tritus", classes[indicesSelectionnes[2]], NULL, NULL);
+    Personnage Ragnard = creerPersonnage(1, "Ragnard", classes[indicesSelectionnes[0]], NULL, NULL);
 
     // création des énnemi
     Ennemi Brigand = creerEnnemi("Brigand", 1, 3, 3, 9, 0);
@@ -435,6 +609,8 @@ int main() {
     printf("\n");
     afficherDispoAcc(dispoAcc);
 
+    afficherTaverne(taverne);
+
     //test sanitarium
     /*
     ajoutSanitarium(&sanitarium, &dispoPerso, Flash);
@@ -445,9 +621,7 @@ int main() {
 
     // test mise en place combat
     printf("Mise en place du combat :\n");
-    MiseEnPlaceCombat(dispoPerso, &listeC, nbcombat);
-
-
+    MiseEnPlaceCombat(dispoPerso, &listeC, nbcombat, &Brigand);
 
     return 0;
 }

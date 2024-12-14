@@ -62,6 +62,11 @@ typedef struct celluleSanitarium {
     struct celluleSanitarium* suivant;
 } celluleSanitarium, *ListeSanitarium;
 
+typedef struct celluleTaverne {
+    Personnage perso;
+    struct celluleTaverne* suivant;
+} celluleTaverne, *ListeTaverne;
+
 
 
 Classe creerClasse(const char* nom, int att, int def, int HPmax, int rest);
@@ -89,6 +94,9 @@ void recupererationHP(ListeSanitarium* liste);
 void afficherSanitarium(ListeSanitarium liste);
 void retirerDuSanitarium(ListeSanitarium* sanitarium, ListePerso* dispoPerso);
 
-
+void ajoutTaverne(ListeTaverne* liste, ListePerso* dispo, Personnage perso);
+void recupererationStress(ListeTaverne* liste);
+void afficherTaverne(ListeTaverne liste);
+void retirerTaverne(ListeTaverne* taverne, ListePerso* dispoPerso);
 
 #endif

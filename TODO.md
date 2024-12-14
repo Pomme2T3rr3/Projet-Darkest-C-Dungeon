@@ -17,7 +17,7 @@
 
 
 ## Taverne
-- [ ] Fonction AjoutTaverne
-- [ ] Fonction Action de la Taverne
-- [ ] Fonction AfficherTaverne
-- [ ] Fonction retirerTaverne
+- [x] Fonction AjoutTaverne
+- [x] Fonction Action de la Taverne
+- [x] Fonction AfficherTaverne
+- [x] Fonction retirerTaverne
