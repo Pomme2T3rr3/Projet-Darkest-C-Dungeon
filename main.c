@@ -456,6 +456,30 @@ void MiseEnPlaceCombat(ListePerso listeP, ListeCombattant* listeC, int nbCombats
 }
 
 
+void phaseAvantCombat(ListeSanitarium* sanitarium, ListeTaverne* taverne,
+                      ListePerso* dispo, ListeRoulotte* roulotte,
+                      ListeAcc* dispoAcc, int* or_joueur) {
+    printf("\n--- Préparation avant le combat suivant ---\n");
+
+    if (*sanitarium != NULL) {
+        printf("\n--- Gestion du sanitarium ---\n");
+        afficherSanitarium(*sanitarium);
+        retirerDuSanitarium(sanitarium, dispo);
+    }
+
+    if (*taverne != NULL) {
+        printf("\n--- Gestion de la taverne ---\n");
+        afficherTaverne(*taverne);
+        retirerTaverne(taverne, dispo);
+    }
+
+    if (*roulotte != NULL) {
+        printf("\n--- Passage à la roulotte ---\n");
+        achat(roulotte, dispoAcc, or_joueur);
+    }
+}
+
+
 void ajoutSanitarium(ListeSanitarium* liste, ListePerso* dispo, Personnage perso) {
     celluleSanitarium* tmp = (celluleSanitarium*)malloc(sizeof(celluleSanitarium));
     if (tmp != NULL) {
