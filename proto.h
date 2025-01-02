@@ -111,6 +111,8 @@ void afficherLot(Accessoire acc);
 void afficherRoulotte(ListeRoulotte roulotte);
 void retirerLot(ListeRoulotte* roulotte, ListeAcc* dispoAcc);
 void achat(ListeRoulotte* roulotte, ListeAcc* dispoAcc, int* or_joueur);
+void phaseAvantCombat(ListeSanitarium* sanitarium, ListeTaverne* taverne, ListePerso* dispo, ListeRoulotte* roulotte, ListeAcc* dispoAcc, int* or_joueur);
+
 
 
 

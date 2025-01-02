@@ -456,30 +456,6 @@ void MiseEnPlaceCombat(ListePerso listeP, ListeCombattant* listeC, int nbCombats
 }
 
 
-void phaseAvantCombat(ListeSanitarium* sanitarium, ListeTaverne* taverne,
-                      ListePerso* dispo, ListeRoulotte* roulotte,
-                      ListeAcc* dispoAcc, int* or_joueur) {
-    printf("\n--- Préparation avant le combat suivant ---\n");
-
-    if (*sanitarium != NULL) {
-        printf("\n--- Gestion du sanitarium ---\n");
-        afficherSanitarium(*sanitarium);
-        retirerDuSanitarium(sanitarium, dispo);
-    }
-
-    if (*taverne != NULL) {
-        printf("\n--- Gestion de la taverne ---\n");
-        afficherTaverne(*taverne);
-        retirerTaverne(taverne, dispo);
-    }
-
-    if (*roulotte != NULL) {
-        printf("\n--- Passage à la roulotte ---\n");
-        achat(roulotte, dispoAcc, or_joueur);
-    }
-}
-
-
 void ajoutSanitarium(ListeSanitarium* liste, ListePerso* dispo, Personnage perso) {
     celluleSanitarium* tmp = (celluleSanitarium*)malloc(sizeof(celluleSanitarium));
     if (tmp != NULL) {
@@ -663,6 +639,25 @@ void afficherRoulotte(ListeRoulotte roulotte) {
     }
 }
 
+
+void retirerLot(ListeRoulotte* roulotte, ListeAcc* dispoAcc) {
+    if (*roulotte == NULL) return;
+
+    celluleRoulotte* courant = *roulotte;
+    *roulotte = courant->suivant;
+
+    // Crée une nouvelle celluleAcc pour dispoAcc
+    celluleAcc* nouvelleCellule = (celluleAcc*)malloc(sizeof(celluleAcc));
+    if (nouvelleCellule != NULL) {
+        nouvelleCellule->acc = courant->acc;  // Copie de l'accessoire
+        nouvelleCellule->suivant = *dispoAcc;
+        *dispoAcc = nouvelleCellule;
+    }
+
+    free(courant);  // Libère l'ancienne cellule de roulotte
+}
+
+/*
 void retirerLot(ListeRoulotte* roulotte, ListeAcc* dispoAcc) {
     if (*roulotte == NULL) return;
 
@@ -671,7 +666,7 @@ void retirerLot(ListeRoulotte* roulotte, ListeAcc* dispoAcc) {
 
     courant->suivant = *dispoAcc;
     *dispoAcc = courant;
-}
+} */
 
 void achat(ListeRoulotte* roulotte, ListeAcc* dispoAcc, int* or_joueur) {
     if (*roulotte == NULL) {
@@ -712,8 +707,15 @@ void achat(ListeRoulotte* roulotte, ListeAcc* dispoAcc, int* or_joueur) {
                     precedent->suivant = courant->suivant;
                 }
 
-                courant->suivant = *dispoAcc;
-                *dispoAcc = courant;
+                // Crée une nouvelle celluleAcc pour dispoAcc
+                celluleAcc* nouvelleCellule = (celluleAcc*)malloc(sizeof(celluleAcc));
+                if (nouvelleCellule != NULL) {
+                    nouvelleCellule->acc = courant->acc;
+                    nouvelleCellule->suivant = *dispoAcc;
+                    *dispoAcc = nouvelleCellule;
+                }
+                
+                free(courant);  // Libère l'ancienne cellule de roulotte
                 return;
 
             } else {
@@ -726,6 +728,30 @@ void achat(ListeRoulotte* roulotte, ListeAcc* dispoAcc, int* or_joueur) {
     }
 
     printf("Accessoire non trouvé.\n");
+}
+
+
+void phaseAvantCombat(ListeSanitarium* sanitarium, ListeTaverne* taverne,
+                      ListePerso* dispo, ListeRoulotte* roulotte,
+                      ListeAcc* dispoAcc, int* or_joueur) {
+    printf("\n--- Préparation avant le combat suivant ---\n");
+
+    if (*sanitarium != NULL) {
+        printf("\n--- Gestion du sanitarium ---\n");
+        afficherSanitarium(*sanitarium);
+        retirerDuSanitarium(sanitarium, dispo);
+    }
+
+    if (*taverne != NULL) {
+        printf("\n--- Gestion de la taverne ---\n");
+        afficherTaverne(*taverne);
+        retirerTaverne(taverne, dispo);
+    }
+
+    if (*roulotte != NULL) {
+        printf("\n--- Passage à la roulotte ---\n");
+        achat(roulotte, dispoAcc, or_joueur);
+    }
 }
 
 
