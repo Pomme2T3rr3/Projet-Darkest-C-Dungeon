@@ -12,12 +12,14 @@ typedef struct Classe {
 } Classe;
 
 typedef struct Accessoire {
+    int num;
     char nom[50];
     char attbonus[10];
     char defbonus[10];
     char HPbonus[10];
     char restbonus[10];
     int strred;
+    int prix;
 } Accessoire;
 
 typedef struct Personnage {
@@ -70,6 +72,10 @@ typedef struct celluleTaverne {
     struct celluleTaverne* suivant;
 } celluleTaverne, *ListeTaverne;
 
+typedef struct celluleRoulotte {
+    Accessoire acc;
+    struct celluleRoulotte* suivant;
+} celluleRoulotte, *ListeRoulotte;
 
 Classe creerClasse(const char* nom, int att, int def, int HPmax, int rest) {
     Classe c;
@@ -81,14 +87,16 @@ Classe creerClasse(const char* nom, int att, int def, int HPmax, int rest) {
     return c;
 }
 
-Accessoire creerAccessoire(const char* nom, const char* attbonus, const char* defbonus, const char* HPbonus, const char* restbonus, int strred) {
+Accessoire creerAccessoire(int num, const char* nom, const char* attbonus, const char* defbonus, const char* HPbonus, const char* restbonus, int strred, int prix) {
     Accessoire acc;
+    acc.num = num;
     strcpy(acc.nom, nom);
     strcpy(acc.attbonus, attbonus);
     strcpy(acc.defbonus, defbonus);
     strcpy(acc.HPbonus, HPbonus);
     strcpy(acc.restbonus, restbonus);
     acc.strred = strred;
+    acc.prix = prix;
     return acc;
 }
 
@@ -104,6 +112,8 @@ void ajoutAcc(ListeAcc* liste, Accessoire acc) {
 void afficherAccessoire(Accessoire acc) {
     printf("   <-%s->\n", acc.nom);
     printf("______________________________\n");
+    printf(" num: %d\n", acc.num);
+    printf("------------------------------\n");
     printf(" attbonus: %s\n", acc.attbonus);
     printf("------------------------------\n");
     printf(" defbonus: %s\n", acc.defbonus);
@@ -538,6 +548,162 @@ void afficherTaverne(ListeTaverne liste) {
     printf("-------------------------------------------------\n");
 }
 
+void ajoutTaverne(ListeTaverne* liste, ListePerso* dispo, Personnage perso) {
+    celluleTaverne* tmp = (celluleTaverne*)malloc(sizeof(celluleTaverne));
+    if (tmp != NULL) {
+        tmp->perso = perso;
+        tmp->suivant = *liste;
+        *liste = tmp;
+
+        // Retirer perso
+        retirerPerso(dispo, perso);
+    }
+    return;
+}
+
+
+void recupererationStress(ListeTaverne* liste) {
+    celluleTaverne* courant = *liste;
+    while (courant != NULL) {
+        courant->perso.str -= 25;
+        if (courant->perso.str < 0) {
+            courant->perso.str = 0;
+        }
+        courant = courant->suivant;
+    }
+}
+
+
+void retirerTaverne(ListeTaverne* taverne, ListePerso* dispoPerso) {
+    celluleTaverne* courant = *taverne;
+    celluleTaverne* precedent = NULL;
+
+    while (courant != NULL) {
+        printf("Voulez-vous faire sortir %s de la Taverne ? ? (Y/N): ", courant->perso.nom);
+        char choix;
+        scanf(" %c", &choix);
+
+        if (choix == 'Y' || choix == 'y') {
+            if (precedent == NULL) {
+                *taverne = courant->suivant;
+            } else {
+                precedent->suivant = courant->suivant;
+            }
+
+            ajoutPerso(dispoPerso, courant->perso);
+
+            free(courant);
+            courant = (precedent == NULL) ? *taverne : precedent->suivant;
+        } else {
+            precedent = courant;
+            courant = courant->suivant;
+        }
+    }
+}
+
+void ajouterlot(ListeRoulotte* roulotte, Accessoire acc) {
+    celluleRoulotte* nouveau = (celluleRoulotte*)malloc(sizeof(celluleRoulotte));
+    if (nouveau != NULL) {
+        nouveau->acc = acc;
+        nouveau->suivant = *roulotte;
+        *roulotte = nouveau;
+    }
+}
+
+void afficherLot(Accessoire acc) {
+    printf("   <-%s->\n", acc.nom);
+    printf("______________________________\n");
+    printf(" num: %d\n", acc.num);
+    printf("------------------------------\n");
+    printf(" attbonus: %s\n", acc.attbonus);
+    printf("------------------------------\n");
+    printf(" defbonus: %s\n", acc.defbonus);
+    printf("------------------------------\n");
+    printf(" HPbonus: %s\n", acc.HPbonus);
+    printf("------------------------------\n");
+    printf(" restbonus: %s\n", acc.restbonus);
+    printf("------------------------------\n");
+    printf(" strred: %d\n", acc.strred);
+    printf("------------------------------\n");
+    printf(" prix: %d\n", acc.prix);
+    printf("______________________________\n");
+    printf("\n");
+}
+
+
+void afficherRoulotte(ListeRoulotte roulotte) {
+    celluleRoulotte* courant = roulotte;
+    while (courant != NULL) {
+        afficherLot(courant->acc);
+        courant = courant->suivant;
+    }
+}
+
+void retirerLot(ListeRoulotte* roulotte, ListeAcc* dispoAcc) {
+    if (*roulotte == NULL) return;
+
+    celluleRoulotte* courant = *roulotte;
+    *roulotte = courant->suivant;
+
+    courant->suivant = *dispoAcc;
+    *dispoAcc = courant;
+}
+
+void achat(ListeRoulotte* roulotte, ListeAcc* dispoAcc, int* or_joueur) {
+    if (*roulotte == NULL) {
+        printf("La roulotte est vide. Aucun achat possible.\n");
+        return;
+    }
+
+    char entree[10];
+    printf("Votre or actuel : %d\n", *or_joueur);
+    afficherRoulotte(*roulotte); 
+
+    printf("Entrez le numéro de l'accessoire à acheter ou 'Q' pour quitter : ");
+    scanf("%s", entree);
+
+    if (strcmp(entree, "Q") == 0 || strcmp(entree, "q") == 0) {
+        printf("Vous quittez la roulotte.\n");
+        return;
+    }
+
+    int choix = atoi(entree);
+    if (choix == 0 && strcmp(entree, "0") != 0) {
+        printf("Entrée invalide. Veuillez entrer un numéro d'accessoire ou 'Q'.\n");
+        return;
+    }
+
+    celluleRoulotte* courant = *roulotte;
+    celluleRoulotte* precedent = NULL;
+
+    while (courant != NULL) {
+        if (courant->acc.num == choix) {
+            if (*or_joueur >= courant->acc.prix) {
+                *or_joueur -= courant->acc.prix; 
+                printf("Vous avez acheté : %s pour %d or.\n", courant->acc.nom, courant->acc.prix);
+
+                if (precedent == NULL) {
+                    *roulotte = courant->suivant;
+                } else {
+                    precedent->suivant = courant->suivant;
+                }
+
+                courant->suivant = *dispoAcc;
+                *dispoAcc = courant;
+                return;
+
+            } else {
+                printf("Vous n'avez pas assez d'or !\n");
+                return;
+            }
+        }
+        precedent = courant;
+        courant = courant->suivant;
+    }
+
+    printf("Accessoire non trouvé.\n");
+}
+
 
 int main() {
 
@@ -551,6 +717,9 @@ int main() {
     ListeAcc dispoAcc = NULL;
     ListeSanitarium sanitarium = NULL;
     ListeTaverne taverne = NULL;
+    ListeRoulotte roulotte = NULL;
+
+    int or_joueur = 0;
 
     // création des classes
     Classe classes[] = {
@@ -573,8 +742,10 @@ int main() {
     }
 
     // création des accesoires
-    Accessoire pendentif_tranchant = creerAccessoire("pendentif_tranchant", "+5", "+1", "+0", "+0", 0);
-    Accessoire calice_de_jeunesse = creerAccessoire("calice_de_jeunesse", "+0", "+3", "+5", "+0", 5);
+    Accessoire pendentif_tranchant = creerAccessoire(1, "pendentif_tranchant", "+5", "+1", "+0", "+0", 0, 7);
+    Accessoire calice_de_jeunesse = creerAccessoire(2, "calice_de_jeunesse", "+0", "+3", "+5", "+0", 5, 16);
+    Accessoire anneau_magique = creerAccessoire(3, "Anneau Magique", "+3", "+2", "+0", "+5", 10, 7);
+    Accessoire amulette_divine = creerAccessoire(4, "Amulette Divine", "+0", "+5", "+10", "+0", 15, 32);
 
     // création des personnages
     Personnage Boudicca = creerPersonnage(6, "Boudicca", classes[indicesSelectionnes[0]], NULL, NULL);
@@ -598,6 +769,9 @@ int main() {
 
     ajoutAcc(&dispoAcc, pendentif_tranchant);
     ajoutAcc(&dispoAcc, calice_de_jeunesse);
+
+    ajouterlot(&roulotte, anneau_magique);
+    ajouterlot(&roulotte, amulette_divine);
 
     printf("\n");
     printf("Personnages disponibles:\n");
@@ -623,5 +797,8 @@ int main() {
     printf("Mise en place du combat :\n");
     MiseEnPlaceCombat(dispoPerso, &listeC, nbcombat, &Brigand);
 
-    return 0;
+    printf("\n");
+    printf("Roulotte :\n");
+    afficherLot(anneau_magique);
+    achat(&roulotte, &dispoAcc, &or_joueur);
 }

@@ -11,11 +11,13 @@ typedef struct Classe {
 
 typedef struct Accessoire {
     char nom[50];
+    int num;
     char attbonus[10];
     char defbonus[10];
     char HPbonus[10];
     char restbonus[10];
     int strred;
+    int prix;
 } Accessoire;
 
 typedef struct Personnage {
@@ -67,11 +69,16 @@ typedef struct celluleTaverne {
     struct celluleTaverne* suivant;
 } celluleTaverne, *ListeTaverne;
 
+typedef struct celluleRoulotte {
+    Accessoire acc;
+    struct celluleRoulotte* suivant;
+} celluleRoulotte, *ListeRoulotte;
+
 
 
 Classe creerClasse(const char* nom, int att, int def, int HPmax, int rest);
 
-Accessoire creerAccessoire(const char* nom, const char* attbonus, const char* defbonus, const char* HPbonus, const char* restbonus, int strred);
+Accessoire creerAccessoire(const char* nom, const char* attbonus, const char* defbonus, const char* HPbonus, const char* restbonus, int strred, int prix);
 void ajoutAcc(ListeAcc* liste, Accessoire acc);
 void afficherAccessoire(Accessoire acc);
 void afficherDispoAcc(ListeAcc liste);
@@ -98,5 +105,13 @@ void ajoutTaverne(ListeTaverne* liste, ListePerso* dispo, Personnage perso);
 void recupererationStress(ListeTaverne* liste);
 void afficherTaverne(ListeTaverne liste);
 void retirerTaverne(ListeTaverne* taverne, ListePerso* dispoPerso);
+
+void ajouterlot(ListeRoulotte* roulotte, Accessoire acc);
+void afficherLot(Accessoire acc);
+void afficherRoulotte(ListeRoulotte roulotte);
+void retirerLot(ListeRoulotte* roulotte, ListeAcc* dispoAcc);
+void achat(ListeRoulotte* roulotte, ListeAcc* dispoAcc, int* or_joueur);
+
+
 
 #endif
