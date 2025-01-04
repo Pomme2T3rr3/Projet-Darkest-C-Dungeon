@@ -354,7 +354,7 @@ void actionEnn(ListeCombattant listeC, Ennemi* enn) {
     }
 }
 
-void combat(ListeCombattant* listeC, Ennemi* enn) {
+int combat(ListeCombattant* listeC, Ennemi* enn) {
 
     srand(time(NULL)); 
     int tour = rand() % 2; 
@@ -372,7 +372,7 @@ void combat(ListeCombattant* listeC, Ennemi* enn) {
 
         if (enn->HPenn <= 0) {
             printf("L'ennemi %s a été vaincu !\n", enn->nom);
-            return;
+            return 1;
         }
 
         celluleCombattant* courant = *listeC;
@@ -395,11 +395,15 @@ void combat(ListeCombattant* listeC, Ennemi* enn) {
 
     if (*listeC == NULL) {
         printf("Tous vos personnages ont été vaincus. Défaite...\n");
+        return 0;
     }
 }
 
 
-void MiseEnPlaceCombat(ListePerso listeP, ListeCombattant* listeC, int nbCombats, Ennemi* enn) {
+int MiseEnPlaceCombat(ListePerso listeP, ListeCombattant* listeC, int nbCombats, Ennemi* enn) {
+    printf("\n");
+    printf("Personnages disponibles:\n");
+    printf("\n");
     afficherDispoPerso(listeP);
 
     int maxCombattants = (nbCombats <= 5) ? 2 : 3;
@@ -452,7 +456,7 @@ void MiseEnPlaceCombat(ListePerso listeP, ListeCombattant* listeC, int nbCombats
     printf("\n");
     afficherCombattants(*listeC);
     printf("\n");
-    combat(listeC, enn);
+    return combat(listeC, enn);
 }
 
 
@@ -639,6 +643,16 @@ void afficherRoulotte(ListeRoulotte roulotte) {
     }
 }
 
+/*
+void retirerLot(ListeRoulotte* roulotte, ListeAcc* dispoAcc) {
+    if (*roulotte == NULL) return;
+
+    celluleRoulotte* courant = *roulotte;
+    *roulotte = courant->suivant;
+    ajoutAcc(&dispoAcc, &courant);
+    free(courant);
+}
+*/
 
 void retirerLot(ListeRoulotte* roulotte, ListeAcc* dispoAcc) {
     if (*roulotte == NULL) return;
@@ -657,25 +671,14 @@ void retirerLot(ListeRoulotte* roulotte, ListeAcc* dispoAcc) {
     free(courant);  // Libère l'ancienne cellule de roulotte
 }
 
-/*
-void retirerLot(ListeRoulotte* roulotte, ListeAcc* dispoAcc) {
-    if (*roulotte == NULL) return;
-
-    celluleRoulotte* courant = *roulotte;
-    *roulotte = courant->suivant;
-
-    courant->suivant = *dispoAcc;
-    *dispoAcc = courant;
-} */
-
-void achat(ListeRoulotte* roulotte, ListeAcc* dispoAcc, int* or_joueur) {
+void achat(ListeRoulotte* roulotte, ListeAcc* dispoAcc, int or_joueur) {
     if (*roulotte == NULL) {
         printf("La roulotte est vide. Aucun achat possible.\n");
         return;
     }
 
     char entree[10];
-    printf("Votre or actuel : %d\n", *or_joueur);
+    printf("Votre or actuel : %d\n", or_joueur);
     afficherRoulotte(*roulotte); 
 
     printf("Entrez le numéro de l'accessoire à acheter ou 'Q' pour quitter : ");
@@ -697,8 +700,8 @@ void achat(ListeRoulotte* roulotte, ListeAcc* dispoAcc, int* or_joueur) {
 
     while (courant != NULL) {
         if (courant->acc.num == choix) {
-            if (*or_joueur >= courant->acc.prix) {
-                *or_joueur -= courant->acc.prix; 
+            if (or_joueur >= courant->acc.prix) {
+                or_joueur -= courant->acc.prix; 
                 printf("Vous avez acheté : %s pour %d or.\n", courant->acc.nom, courant->acc.prix);
 
                 if (precedent == NULL) {
@@ -733,8 +736,9 @@ void achat(ListeRoulotte* roulotte, ListeAcc* dispoAcc, int* or_joueur) {
 
 void phaseAvantCombat(ListeSanitarium* sanitarium, ListeTaverne* taverne,
                       ListePerso* dispo, ListeRoulotte* roulotte,
-                      ListeAcc* dispoAcc, int* or_joueur) {
+                      ListeAcc* dispoAcc, int or_joueur) {
     printf("\n--- Préparation avant le combat suivant ---\n");
+
 
     if (*sanitarium != NULL) {
         printf("\n--- Gestion du sanitarium ---\n");
@@ -769,8 +773,6 @@ int main() {
     ListeTaverne taverne = NULL;
     ListeRoulotte roulotte = NULL;
 
-    int or_joueur = 0;
-
     // création des classes
     Classe classes[] = {
         creerClasse("Furie", 13, 0, 20, 0),
@@ -792,30 +794,22 @@ int main() {
     }
 
     // création des accesoires
-    Accessoire pendentif_tranchant = creerAccessoire(1, "pendentif_tranchant", "+5", "+1", "+0", "+0", 0, 7);
-    Accessoire calice_de_jeunesse = creerAccessoire(2, "calice_de_jeunesse", "+0", "+3", "+5", "+0", 5, 16);
+    Accessoire pendentif_tranchant = creerAccessoire(1, "pendentif tranchant", "+5", "+1", "+0", "+0", 0, 7);
+    Accessoire calice_de_jeunesse = creerAccessoire(2, "calice de jeunesse", "+0", "+3", "+5", "+0", 5, 16);
     Accessoire anneau_magique = creerAccessoire(3, "Anneau Magique", "+3", "+2", "+0", "+5", 10, 7);
     Accessoire amulette_divine = creerAccessoire(4, "Amulette Divine", "+0", "+5", "+10", "+0", 15, 32);
 
     // création des personnages
-    Personnage Boudicca = creerPersonnage(6, "Boudicca", classes[indicesSelectionnes[0]], NULL, NULL);
-    Personnage Junia = creerPersonnage(5, "Junia", classes[indicesSelectionnes[1]], NULL, NULL);
-    Personnage Flash = creerPersonnage(4, "Flash", classes[indicesSelectionnes[2]], NULL, NULL);
-    Personnage Gordi = creerPersonnage(3, "Gordi", classes[indicesSelectionnes[3]], NULL, NULL);
-    Personnage Tritus = creerPersonnage(2, "Tritus", classes[indicesSelectionnes[2]], NULL, NULL);
-    Personnage Ragnard = creerPersonnage(1, "Ragnard", classes[indicesSelectionnes[0]], NULL, NULL);
+    Personnage Boudicca = creerPersonnage(1, "Boudicca", classes[indicesSelectionnes[0]], NULL, NULL);
+    Personnage Junia = creerPersonnage(2, "Junia", classes[indicesSelectionnes[1]], NULL, NULL);
 
-    // création des énnemi
-    Ennemi Brigand = creerEnnemi("Brigand", 1, 3, 3, 9, 0);
-    Ennemi Squelette = creerEnnemi("Squelette", 2, 6, 4, 13, 10);
-    Ennemi Goule = creerEnnemi("Goule", 3, 8, 8, 16, 20);
+    printf("\n");
+    printf("Accessoires disponibles:\n");
+    printf("\n");
+    afficherDispoAcc(dispoAcc);
 
     ajoutPerso(&dispoPerso, Boudicca);
     ajoutPerso(&dispoPerso, Junia);
-    ajoutPerso(&dispoPerso, Flash);
-    ajoutPerso(&dispoPerso, Gordi);
-    ajoutPerso(&dispoPerso, Tritus);
-    ajoutPerso(&dispoPerso, Ragnard);
 
     ajoutAcc(&dispoAcc, pendentif_tranchant);
     ajoutAcc(&dispoAcc, calice_de_jeunesse);
@@ -823,32 +817,52 @@ int main() {
     ajouterlot(&roulotte, anneau_magique);
     ajouterlot(&roulotte, amulette_divine);
 
-    printf("\n");
-    printf("Personnages disponibles:\n");
-    printf("\n");
-    afficherDispoPerso(dispoPerso);
+    // Création des ennemis
+    Ennemi ennemis[] = {
+        creerEnnemi("Brigand", 1, 2, 10, 10, 2),
+        creerEnnemi("Squelette", 2, 3, 11, 15, 3),
+        creerEnnemi("Goule", 3, 5, 13, 20, 5),
+        creerEnnemi("Zombi", 4, 6, 14, 25, 6),
+        creerEnnemi("Ogre", 5, 8, 16, 30, 8),
+        creerEnnemi("Loup_garou", 6, 9, 18, 35, 9),
+        creerEnnemi("Hydre", 7, 11, 19, 40, 11),
+        creerEnnemi("Spectre", 8, 12, 20, 45, 12),
+        creerEnnemi("Golem", 9, 14, 22, 50, 14),
+        creerEnnemi("Chevalier noir", 10, 15, 23, 60, 15)
+    };
 
-    printf("\n");
-    printf("Accessoires disponibles:\n");
-    printf("\n");
-    afficherDispoAcc(dispoAcc);
+    int nombreEnnemis = sizeof(ennemis) / sizeof(ennemis[0]);
+    int niveau = 0;
+    int or_joueur = 0;
+    int victoire = 0;
 
-    afficherTaverne(taverne);
+    while (victoire == 0 && niveau < nombreEnnemis) {
+        printf("\nNiveau %d - Mise en place du combat contre %s :\n\n", niveau + 1, ennemis[niveau].nom);
 
-    //test sanitarium
-    /*
-    ajoutSanitarium(&sanitarium, &dispoPerso, Flash);
-    afficherDispoPerso(dispoPerso);
-    afficherSanitarium(sanitarium);
-    retirerDuSanitarium(&sanitarium, &dispoPerso);
-    afficherDispoPerso(dispoPerso); */
+        int resultatCombat = MiseEnPlaceCombat(dispoPerso, &listeC, nbcombat, &ennemis[niveau]);
 
-    // test mise en place combat
-    printf("Mise en place du combat :\n");
-    MiseEnPlaceCombat(dispoPerso, &listeC, nbcombat, &Brigand);
+        if (resultatCombat == 0) { 
+            printf("Vous avez perdu le combat contre %s. Le jeu est terminé.\n", ennemis[niveau].nom);
+            victoire = -1; 
+            break;
+        }
 
-    printf("\n");
-    printf("Roulotte :\n");
-    afficherLot(anneau_magique);
-    achat(&roulotte, &dispoAcc, &or_joueur);
+        printf("Félicitations ! Vous avez vaincu %s.\n", ennemis[niveau].nom);
+        niveau++; 
+
+        if (niveau >= nombreEnnemis) {
+            printf("Félicitations ! Vous avez vaincu tous les ennemis et gagné le jeu !\n");
+            victoire = 1; 
+            break;
+        }
+
+        or_joueur += 10;
+        phaseAvantCombat(&sanitarium, &taverne, &dispoPerso, &roulotte, &dispoAcc, or_joueur);
+
+        if (niveau == 2) ajoutPerso(&dispoPerso, creerPersonnage(3, "Flash", classes[indicesSelectionnes[2]], NULL, NULL));
+        if (niveau == 4) ajoutPerso(&dispoPerso, creerPersonnage(4, "Gordi", classes[indicesSelectionnes[3]], NULL, NULL));
+        if (niveau == 7) ajoutPerso(&dispoPerso, creerPersonnage(5, "Ragnard", classes[indicesSelectionnes[0]], NULL, NULL));
+        if (niveau == 8) ajoutPerso(&dispoPerso, creerPersonnage(6, "Tritus", classes[indicesSelectionnes[1]], NULL, NULL));
+    }
+
 }
