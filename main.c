@@ -136,6 +136,27 @@ void afficherDispoAcc(ListeAcc liste) {
     }
 }
 
+
+Accessoire* retirerAcc(ListeAcc* liste, int id) {
+    ListeAcc courant = *liste;
+    ListeAcc precedent = NULL;
+    
+    while (courant != NULL) {
+        if (courant->acc.num == id) {
+            if (precedent == NULL) {
+                *liste = courant->suivant;
+            } else {
+                precedent->suivant = courant->suivant;
+            }
+            return &courant->acc;
+        }
+        precedent = courant;
+        courant = courant->suivant;
+    }
+    return NULL;
+}
+
+
 Personnage creerPersonnage(int num, const char* nom, Classe classe, Accessoire* acc1, Accessoire* acc2) {
     Personnage perso;
     perso.num = num;
@@ -793,11 +814,21 @@ int main() {
         }
     }
 
-    // création des accesoires
+    // création des accessoires
     Accessoire pendentif_tranchant = creerAccessoire(1, "pendentif tranchant", "+5", "+1", "+0", "+0", 0, 7);
     Accessoire calice_de_jeunesse = creerAccessoire(2, "calice de jeunesse", "+0", "+3", "+5", "+0", 5, 16);
     Accessoire anneau_magique = creerAccessoire(3, "Anneau Magique", "+3", "+2", "+0", "+5", 10, 7);
     Accessoire amulette_divine = creerAccessoire(4, "Amulette Divine", "+0", "+5", "+10", "+0", 15, 32);
+    Accessoire lame_du_roi_dechu = creerAccessoire(5, "Lame du Roi Déchu", "+8", "+2", "+0", "+3", 5, 20);
+    Accessoire egide_de_la_legion = creerAccessoire(6, "Égide de la Légion", "+0", "+6", "+10", "+0", 8, 15);
+    Accessoire danse_de_la_mort = creerAccessoire(7, "Danse de la Mort", "+12", "+0", "+0", "+5", 10, 25);
+    Accessoire cape_de_la_nuit = creerAccessoire(8, "Cape de la Nuit", "+0", "+4", "+0", "+7", 7, 18);
+    Accessoire cotte_epineuse = creerAccessoire(9, "Cotte Épineuse", "+0", "+10", "+20", "+0", 12, 30);
+    Accessoire gage_de_sterak = creerAccessoire(10, "Gage de Sterak", "+5", "+0", "+15", "+0", 6, 22);
+    Accessoire cimeterre_mercantile = creerAccessoire(11, "Cimeterre Mercuriel", "+10", "+2", "+0", "+0", 7, 26);
+    Accessoire heraut_de_zaun = creerAccessoire(12, "Héraut de Zaun", "+0", "+5", "+5", "+10", 8, 24);
+    Accessoire sablier_de_zhonya = creerAccessoire(13, "Sablier de Zhonya", "+0", "+7", "+0", "+15", 10, 28);
+    Accessoire arc_axiomatique = creerAccessoire(14, "Arc Axiomatique", "+15", "+0", "+0", "+0", 5, 19);
 
     // création des personnages
     Personnage Boudicca = creerPersonnage(1, "Boudicca", classes[indicesSelectionnes[0]], NULL, NULL);
@@ -835,6 +866,41 @@ int main() {
     int niveau = 0;
     int or_joueur = 0;
     int victoire = 0;
+
+
+    printf("\nPhase de préparation :\n");
+    printf("Vous pouvez attribuer jusqu'à 2 accessoires aux deux personnages suivants :\n");
+
+    printf("1. %s\n", Boudicca.nom);
+    printf("2. %s\n\n", Junia.nom);
+    printf("Voici les accessoires disponibles :\n");
+
+    afficherDispoAcc(dispoAcc);
+
+    for (int i = 0; i < 2; i++) {
+        int choixAccessoire, choixPersonnage;
+        
+        printf("\nChoisissez un accessoire (entrez l'ID de l'accessoire) : ");
+        scanf("%d", &choixAccessoire);
+        
+        printf("A quel personnage souhaitez-vous l'attribuer ? (1: %s, 2: %s) : ", Boudicca.nom, Junia.nom);
+        scanf("%d", &choixPersonnage);
+        
+        Accessoire* accessoireSelectionne = retirerAcc(&dispoAcc, choixAccessoire);
+        
+        if (accessoireSelectionne != NULL) {
+            if (choixPersonnage == 1) {
+                Boudicca.acc_1 = accessoireSelectionne;
+            } else if (choixPersonnage == 2) {
+                Junia.acc_1 = accessoireSelectionne;
+            } else {
+                printf("Personnage invalide. Réessayez.\n");
+            }
+        } else {
+            printf("Accessoire non trouvé. Réessayez.\n");
+        }
+    }
+
 
     while (victoire == 0 && niveau < nombreEnnemis) {
         printf("\nNiveau %d - Mise en place du combat contre %s :\n\n", niveau + 1, ennemis[niveau].nom);
