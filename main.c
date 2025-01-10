@@ -421,7 +421,7 @@ int combat(ListeCombattant* listeC, Ennemi* enn) {
 }
 
 
-int MiseEnPlaceCombat(ListePerso listeP, ListeCombattant* listeC, int nbCombats, Ennemi* enn) {
+int MiseEnPlaceCombat(ListePerso listeP, ListeCombattant* listeC, int nbCombats, Ennemi* enn, ListeAcc* dispoAcc) {
     printf("\n");
     printf("Personnages disponibles:\n");
     printf("\n");
@@ -472,6 +472,8 @@ int MiseEnPlaceCombat(ListePerso listeP, ListeCombattant* listeC, int nbCombats,
         indicesSelectionnes[nbSelectionnes] = numero;
         nbSelectionnes++;
     }
+
+    attribuerAccessoires(&dispoAcc, 1, 2);
 
     printf("Combat préparé avec les combattants suivants :\n");
     printf("\n");
@@ -664,16 +666,6 @@ void afficherRoulotte(ListeRoulotte roulotte) {
     }
 }
 
-/*
-void retirerLot(ListeRoulotte* roulotte, ListeAcc* dispoAcc) {
-    if (*roulotte == NULL) return;
-
-    celluleRoulotte* courant = *roulotte;
-    *roulotte = courant->suivant;
-    ajoutAcc(&dispoAcc, &courant);
-    free(courant);
-}
-*/
 
 void retirerLot(ListeRoulotte* roulotte, ListeAcc* dispoAcc) {
     if (*roulotte == NULL) return;
@@ -1121,14 +1113,11 @@ int main() {
         nombreEnnemis = sizeof(ennemis) / sizeof(ennemis[0]);
     }
 
-    
-    attribuerAccessoires(&dispoAcc, 1, 2);
-
 
     while (victoire == 0 && niveau < nombreEnnemis && quitter != 1) {
         printf("\nNiveau %d - Mise en place du combat contre %s :\n\n", niveau + 1, ennemis[niveau].nom);
 
-        int resultatCombat = MiseEnPlaceCombat(dispoPerso, &listeC, nbcombat, &ennemis[niveau]);
+        int resultatCombat = MiseEnPlaceCombat(dispoPerso, &listeC, nbcombat, &ennemis[niveau], &dispoAcc);
 
         if (resultatCombat == 0) { 
             printf("Vous avez perdu le combat contre %s. Le jeu est terminé.\n", ennemis[niveau].nom);
