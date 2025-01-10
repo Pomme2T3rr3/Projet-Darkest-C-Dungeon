@@ -791,6 +791,52 @@ int phaseAvantCombat(ListeSanitarium* sanitarium, ListeTaverne* taverne,
 }
 
 
+void attribuerAccessoires(ListeAcc* dispoAcc, Personnage* perso1, Personnage* perso2) {
+    printf("\nPhase de préparation :\n");
+    printf("Vous pouvez attribuer jusqu'à 2 accessoires aux deux personnages suivants :\n");
+
+    printf("1. %s\n", perso1->nom);
+    printf("2. %s\n\n", perso2->nom);
+    printf("Voici les accessoires disponibles :\n");
+
+    afficherDispoAcc(*dispoAcc);
+
+    for (int i = 0; i < 2; i++) {
+        int choixAccessoire, choixPersonnage;
+
+        printf("\nChoisissez un accessoire (entrez le numéro de l'accessoire) : ");
+        scanf("%d", &choixAccessoire);
+
+        printf("A quel personnage souhaitez-vous l'attribuer ? (1: %s, 2: %s) : ", perso1->nom, perso2->nom);
+        scanf("%d", &choixPersonnage);
+
+        Accessoire* accessoireSelectionne = retirerAcc(dispoAcc, choixAccessoire);
+
+        if (accessoireSelectionne != NULL) {
+            Personnage* persoCible = (choixPersonnage == 1) ? perso1 : (choixPersonnage == 2) ? perso2 : NULL;
+
+            if (persoCible != NULL) {
+                if (persoCible->acc_1 == NULL) {
+                    persoCible->acc_1 = accessoireSelectionne;
+                    persoCible->HP += atoi(accessoireSelectionne->HPbonus);
+                    persoCible->HPmax += atoi(accessoireSelectionne->HPbonus);
+                } else if (persoCible->acc_2 == NULL) {
+                    persoCible->acc_2 = accessoireSelectionne;
+                    persoCible->HP += atoi(accessoireSelectionne->HPbonus);
+                    persoCible->HPmax += atoi(accessoireSelectionne->HPbonus);
+                } else {
+                    printf("Le personnage %s a déjà 2 accessoires attribués.\n", persoCible->nom);
+                }
+            } else {
+                printf("Personnage invalide. Réessayez.\n");
+            }
+        } else {
+            printf("Accessoire non trouvé. Réessayez.\n");
+        }
+    }
+}
+
+
 void sauvegarderJeu(const char* nomFichier, int* victoire, int* niveau, int* nombreEnnemis, int* or_joueur, 
                     ListePerso dispoPerso, ListeSanitarium sanitarium, ListeTaverne taverne, 
                     ListeAcc dispoAcc, ListeRoulotte roulotte) {
@@ -915,7 +961,7 @@ void chargerJeu(const char* nomFichier, int* victoire, int* niveau, int* nombreE
                 Personnage perso;
                 if (sscanf(ligne, "- ID: %d, Nom: %[^,], Classe: %[^,], Att: %d, Def: %d, HP: %d, HPmax: %d, Rest: %d, Str: %d",
                            &perso.num, perso.nom, perso.classe, &perso.att, &perso.def, &perso.HP, &perso.HPmax, &perso.rest, &perso.str) == 9) {
-                    ajoutPerso(sanitarium, perso);
+                    ajoutSanitarium(sanitarium, dispoPerso, perso);
                 } else {
                     printf("Erreur de format dans la ligne des personnages du sanitarium : %s\n", ligne);
                 }
@@ -929,7 +975,7 @@ void chargerJeu(const char* nomFichier, int* victoire, int* niveau, int* nombreE
                 Personnage perso;
                 if (sscanf(ligne, "- ID: %d, Nom: %[^,], Classe: %[^,], Att: %d, Def: %d, HP: %d, HPmax: %d, Rest: %d, Str: %d",
                            &perso.num, perso.nom, perso.classe, &perso.att, &perso.def, &perso.HP, &perso.HPmax, &perso.rest, &perso.str) == 9) {
-                    ajoutPerso(taverne, perso);
+                    ajoutTaverne(taverne, dispoPerso, perso);
                 } else {
                     printf("Erreur de format dans la ligne des personnages de la taverne : %s\n", ligne);
                 }
@@ -1075,38 +1121,8 @@ int main() {
         nombreEnnemis = sizeof(ennemis) / sizeof(ennemis[0]);
     }
 
-    printf("\nPhase de préparation :\n");
-    printf("Vous pouvez attribuer jusqu'à 2 accessoires aux deux personnages suivants :\n");
-
-    printf("1. %s\n", Boudicca.nom);
-    printf("2. %s\n\n", Junia.nom);
-    printf("Voici les accessoires disponibles :\n");
-
-    afficherDispoAcc(dispoAcc);
-
-    for (int i = 0; i < 2; i++) {
-        int choixAccessoire, choixPersonnage;
-        
-        printf("\nChoisissez un accessoire (entrez l'ID de l'accessoire) : ");
-        scanf("%d", &choixAccessoire);
-        
-        printf("A quel personnage souhaitez-vous l'attribuer ? (1: %s, 2: %s) : ", Boudicca.nom, Junia.nom);
-        scanf("%d", &choixPersonnage);
-        
-        Accessoire* accessoireSelectionne = retirerAcc(&dispoAcc, choixAccessoire);
-        
-        if (accessoireSelectionne != NULL) {
-            if (choixPersonnage == 1) {
-                Boudicca.acc_1 = accessoireSelectionne;
-            } else if (choixPersonnage == 2) {
-                Junia.acc_1 = accessoireSelectionne;
-            } else {
-                printf("Personnage invalide. Réessayez.\n");
-            }
-        } else {
-            printf("Accessoire non trouvé. Réessayez.\n");
-        }
-    }
+    
+    attribuerAccessoires(&dispoAcc, 1, 2);
 
 
     while (victoire == 0 && niveau < nombreEnnemis && quitter != 1) {
