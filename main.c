@@ -101,6 +101,16 @@ Accessoire creerAccessoire(int num, const char* nom, const char* attbonus, const
 }
 
 void ajoutAcc(ListeAcc* liste, Accessoire acc) {
+    /**
+     * @brief Ajoute un accessoire à une liste chaînée d'accessoires.
+     *
+     * Cette fonction crée une nouvelle cellule pour un accessoire donné 
+     * et l'ajoute au début de la liste chaînée des accessoires.
+     *
+     * @param liste Pointeur vers la liste chaînée d'accessoires.
+     * 
+     * @param acc   L'accessoire à ajouter (de type Accessoire).
+     */
     celluleAcc* tmp = (celluleAcc*)malloc(sizeof(celluleAcc));
     if (tmp != NULL) {
         tmp->acc = acc;
@@ -110,6 +120,13 @@ void ajoutAcc(ListeAcc* liste, Accessoire acc) {
 }
 
 void afficherAccessoire(Accessoire acc) {
+    /**
+     * @brief Affiche les détails d'un accessoire.
+     *
+     * Cette fonction affiche les informatios d'un accessoire
+     *
+     * @param acc L'accessoire à afficher (de type Accessoire).
+     */
     printf("   <-%s->\n", acc.nom);
     printf("______________________________\n");
     printf(" num: %d\n", acc.num);
@@ -129,6 +146,13 @@ void afficherAccessoire(Accessoire acc) {
 }
 
 void afficherDispoAcc(ListeAcc liste) {
+    /**
+     * @brief Affiche tous les accessoires disponibles dans une liste.
+     *
+     * Cette fonction affice les accessoires disponibles.
+     *
+     * @param liste La liste chaînée des accessoires (de type ListeAcc).
+     */
     celluleAcc* courant = liste;
     while (courant != NULL) {
         afficherAccessoire(courant->acc);
@@ -138,6 +162,15 @@ void afficherDispoAcc(ListeAcc liste) {
 
 
 Accessoire* retirerAcc(ListeAcc* liste, int id) {
+    /**
+     * @brief Retire un accessoire d'une liste chaînée d'accessoires en fonction de son identifiant.
+     *
+     * @param liste Un pointeur vers la liste chaînée des accessoires (de type ListeAcc*).
+     * @param id L'identifiant de l'accessoire à retirer.
+     * @return Un pointeur vers l'accessoire retiré (de type Accessoire*) si trouvé, ou NULL si aucun accessoire avec 
+     *         l'identifiant donné n'est trouvé.
+     *
+     */
     ListeAcc courant = *liste;
     ListeAcc precedent = NULL;
 
@@ -176,6 +209,12 @@ Personnage creerPersonnage(int num, const char* nom, Classe classe, Accessoire* 
 
 
 void ajoutPerso(ListePerso* liste, Personnage perso) {
+    /**
+     * @brief Ajoute un personnage à la liste chaînée de personnages.
+     *
+     * @param liste Un pointeur vers la liste chaînée des personnages (de type ListePerso*).
+     * @param perso Le personnage à ajouter (de type Personnage).
+     */
     cellulePerso* tmp = (cellulePerso*)malloc(sizeof(cellulePerso));
     if (tmp != NULL) {
         tmp->perso = perso;
@@ -185,6 +224,13 @@ void ajoutPerso(ListePerso* liste, Personnage perso) {
 }
 
 void ajoutCombattant(ListeCombattant* listeC, Personnage perso) {
+    /**
+     * @brief Ajoute un personnage à la liste chaînée de personnages combattants.
+     *
+     * @param listeC Pointeur vers la tête de la liste chaînée des combattants.
+     *               La liste sera mise à jour pour inclure le nouveau combattant.
+     * @param perso Le personnage à ajouter à la liste des combattants.
+     */
     celluleCombattant* nouveau = (celluleCombattant*)malloc(sizeof(celluleCombattant));
     nouveau->perso = perso;
     nouveau->suivant = *listeC;
@@ -192,6 +238,14 @@ void ajoutCombattant(ListeCombattant* listeC, Personnage perso) {
 }
 
 void retirerPerso(ListePerso *liste, Personnage perso) {
+    /**
+     * @brief Retire un personnage de la liste chaînée des personnages.
+     *
+     * @param liste Pointeur vers la tête de la liste chaînée des personnages.
+     *              La liste sera mise à jour après la suppression du personnage.
+     * @param perso Le personnage à retirer de la liste. La comparaison se fait
+     *              sur le nom du personnage.
+     */
     cellulePerso *courant = *liste;
     cellulePerso *precedent = NULL;
 
@@ -214,6 +268,11 @@ void retirerPerso(ListePerso *liste, Personnage perso) {
 
 
 void afficherPersonnage(Personnage perso) {
+    /**
+     * @brief Affiche les informations d'un personnage.
+     *
+     * @param perso Les infos du personnage à afficher.
+     */
     printf("          <-%s->\n", perso.nom);
     printf("______________________________\n");
     printf(" num: %d\n", perso.num);
@@ -241,6 +300,12 @@ void afficherPersonnage(Personnage perso) {
 }
 
 void afficherDispoPerso(ListePerso liste) {
+    /**
+     * @brief Affiche les personnages disponible.
+     *
+     * @param liste La liste des personnages à afficher. Chaque personnage sera affiché individuellement 
+     *              avec ses informations détaillées.
+     */
     cellulePerso* courant = liste;
     while (courant != NULL) {
         afficherPersonnage(courant->perso);
@@ -250,6 +315,11 @@ void afficherDispoPerso(ListePerso liste) {
 
 
 void afficherCombattants(ListeCombattant listeC) {
+     /**
+     * @brief Affiche les personnages combattants
+     *
+     * @param listeC La liste des personnages combattants à afficher.
+     */
     celluleCombattant* courant = listeC;
     while (courant != NULL) {
         afficherPersonnage(courant->perso);
@@ -271,6 +341,15 @@ Ennemi creerEnnemi(const char* nom, int niveau, int attenn, int defenn, int HPen
 
 
 int indiceDejaSelectionne(int* indices, int taille, int indice) {
+    /**
+     * @brief Vérifie si un indice a déjà été sélectionné dans un tableau.
+     *
+     * @param indices Le tableau d'indices à vérifier.
+     * @param taille La taille du tableau `indices`, indique le nombre d'éléments dans le tableau.
+     * @param indice L'indice à vérifier dans le tableau.
+     * 
+     * @return Retourne 1 si l'indice est déjà présent dans le tableau, sinon retourne 0.
+     */
     for (int i = 0; i < taille; i++) {
         if (indices[i] == indice) {
             return 1;
@@ -281,6 +360,13 @@ int indiceDejaSelectionne(int* indices, int taille, int indice) {
 
 
 void actionsPerso(ListeCombattant listeC, Ennemi* enn) {
+    /**
+     * @brief Permet aux personnages de la liste d'effectuer une action (sélectionnée dans le terminal par une lettre) 
+     *        durant leur tour.
+     *
+     * @param listeC La liste des combattants qui vont exécuter leurs actions.
+     * @param enn L'ennemi contre lequel les personnages vont interagir.
+     */
 
     celluleCombattant* courant = listeC;
     while (courant != NULL) {
@@ -344,6 +430,12 @@ void actionsPerso(ListeCombattant listeC, Ennemi* enn) {
 
 
 void actionEnn(ListeCombattant listeC, Ennemi* enn) {
+    /**
+     * @brief Permet à un ennemi d'attaquer un combattant au hasard dans la liste des personnages combattants.
+     *
+     * @param listeC La liste des combattants présents dans le combat.
+     * @param enn L'ennemi qui va attaquer un combattant.
+     */
     if (listeC == NULL) {
         printf("Pas de combattants disponibles pour l'ennemi à attaquer.\n");
         return;
@@ -376,6 +468,11 @@ void actionEnn(ListeCombattant listeC, Ennemi* enn) {
 }
 
 void incrementerNbCombats(ListeCombattant listeC) {
+    /**
+     * @brief Incrémente le nombre de combats de chaque combattant de la liste des personnages combattants.
+     *
+     * @param listeC La liste des combattants à parcourir.
+     */
     celluleCombattant* courant = listeC;
     while (courant != NULL) {
         courant->perso.nbcomb++;
@@ -384,6 +481,14 @@ void incrementerNbCombats(ListeCombattant listeC) {
 }
 
 int combat(ListeCombattant* listeC, Ennemi* enn) {
+    /**
+     * @brief Gère le déroulement du combat entre les personnages et un ennemi.
+     *
+     * @param listeC La liste des combattants (personnages) participant au combat.
+     * @param enn Pointeur vers l'ennemi qui participe au combat.
+     * 
+     * @return 1 si l'ennemi est vaincu, 0 si tous les personnages sont éliminés.
+     */
 
     srand(time(NULL));
     int tour = rand() % 2;
@@ -431,6 +536,12 @@ int combat(ListeCombattant* listeC, Ennemi* enn) {
 
 
 void attribuerAccessoires(ListeAcc dispoAcc, ListeCombattant listeCombattants) {
+    /**
+     * @brief Permet d'attribuer des accessoires aux combattants pendant la phase de préparation.
+     * 
+     * @param dispoAcc La liste des accessoires disponibles à attribuer.
+     * @param listeCombattants La liste des combattants à qui les accessoires peuvent être attribués.
+     */
     printf("\nPhase de préparation :\n");
     printf("Vous pouvez attribuer des accessoires aux personnages suivants :\n");
 
@@ -491,6 +602,17 @@ void attribuerAccessoires(ListeAcc dispoAcc, ListeCombattant listeCombattants) {
 
 
 int MiseEnPlaceCombat(ListePerso listeP, ListeCombattant* listeC, int nbCombats, Ennemi* enn, ListeAcc* dispoAcc) {
+    /**
+ * @brief Prépare le prochain combat en sélectionnant les combattants et en leur attribuant des accessoires.
+ * 
+ * @param listeP La liste des personnages disponibles.
+ * @param listeC Pointeur vers la liste des combattants qui sera mise à jour avec les personnages sélectionnés.
+ * @param nbCombats Le nombre de combats qui détermine le nombre de combattants à sélectionner (2 ou 3).
+ * @param enn L'ennemi contre lequel les combattants vont se battre.
+ * @param dispoAcc Liste des accessoires disponibles pour être attribués aux combattants.
+ * 
+ * @return 1 Si les combattants ont gagné le combat, 0 en cas de défaite.
+ */
     printf("\n");
     printf("Personnages disponibles:\n");
     printf("\n");
@@ -553,6 +675,13 @@ int MiseEnPlaceCombat(ListePerso listeP, ListeCombattant* listeC, int nbCombats,
 
 
 void ajoutSanitarium(ListeSanitarium* liste, ListePerso* dispo, Personnage perso) {
+    /**
+     * @brief Ajoute un personnage au Sanitarium et le retire de la liste des personnages disponibles.
+     *
+     * @param liste Pointeur vers la liste des personnages au Sanitarium qui sera mise à jour.
+     * @param dispo Pointeur vers la liste des personnages disponibles, de laquelle le personnage sera retiré.
+     * @param perso Le personnage à ajouter au Sanitarium.
+     */
     celluleSanitarium* tmp = (celluleSanitarium*)malloc(sizeof(celluleSanitarium));
     if (tmp != NULL) {
         tmp->perso = perso;
@@ -567,6 +696,11 @@ void ajoutSanitarium(ListeSanitarium* liste, ListePerso* dispo, Personnage perso
 
 
 void recupererationHP(ListeSanitarium* liste) {
+    /**
+     * @brief Restaure les points de vie (HP) des personnages grâce au Sanitarium.
+     * 
+     * @param liste Pointeur vers la liste des personnages au Sanitarium dont les HP seront restaurés.
+     */
     celluleSanitarium* courant = *liste;
     while (courant != NULL) {
         courant->perso.HP += 7;
@@ -579,6 +713,11 @@ void recupererationHP(ListeSanitarium* liste) {
 
 
 void afficherSanitarium(Personnage perso) {
+    /**
+     * @brief Affiche les informations d'un personnage au Sanitarium.
+     * 
+     * @param perso Le personnage dont les informations seront affichées.
+     */
     printf("          <-%s->\n", perso.nom);
     printf("______________________________\n");
     printf(" num: %d\n", perso.num);
@@ -607,6 +746,11 @@ void afficherSanitarium(Personnage perso) {
 
 
 void sanitarium_affichage(ListeSanitarium liste) {
+    /**
+     * @brief Affiche les informations de tous les personnages présents dans le Sanitarium (fonction principale d'affichage).
+     * 
+     * @param liste La liste des personnages présents dans le Sanitarium.
+     */
     celluleSanitarium* courant = liste;
     while (courant != NULL) {
         afficherSanitarium(courant->perso);
@@ -616,6 +760,12 @@ void sanitarium_affichage(ListeSanitarium liste) {
 
 
 void retirerDuSanitarium(ListeSanitarium* sanitarium, ListePerso* dispoPerso) {
+    /**
+     * @brief Retire un personnage du Sanitarium et le réintègre dans la liste des personnages disponibles.
+     * 
+     * @param sanitarium La liste des personnages présents dans le Sanitarium.
+     * @param dispoPerso La liste des personnages disponibles, dans laquelle le personnage sera réintégré.
+     */
     celluleSanitarium* courant = *sanitarium;
     celluleSanitarium* precedent = NULL;
 
@@ -643,6 +793,11 @@ void retirerDuSanitarium(ListeSanitarium* sanitarium, ListePerso* dispoPerso) {
 }
 
 void afficherTaverne(Personnage perso) {
+    /**
+     * @brief Affiche les informations d'un personnage dans la Taverne.
+     * 
+     * @param perso Le personnage dont les informations doivent être affichées.
+     */
     printf("          <-%s->\n", perso.nom);
     printf("______________________________\n");
     printf(" num: %d\n", perso.num);
