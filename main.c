@@ -398,7 +398,7 @@ void actionsPerso(ListeCombattant listeC, Ennemi* enn) {
             printf("%s attaque et inflige %d dégâts. %s a %d HP restants.\n", courant->perso.nom, dommages, enn->nom, enn->HPenn);
 
         } else if (action == 'D') {
-            courant->perso.def += courant->perso.def * 0.1;
+            courant->perso.def += (courant->perso.def + bonusDefense) * 0.1;
             printf("%s défend. Défense augmentée pour ce tour.\n", courant->perso.nom);
 
         } else if (action == 'R') {
@@ -532,6 +532,7 @@ int combat(ListeCombattant* listeC, Ennemi* enn) {
         printf("Tous vos personnages ont été vaincus. Défaite...\n");
         return 0;
     }
+    return 1;
 }
 
 
@@ -1024,6 +1025,7 @@ void achat(ListeRoulotte* roulotte, ListeAcc* dispoAcc, int or_joueur) {
             if (or_joueur >= courant->acc.prix) {
                 or_joueur -= courant->acc.prix;
                 printf("Vous avez acheté : %s pour %d or.\n", courant->acc.nom, courant->acc.prix);
+                printf("Votre or actuel : %d\n", or_joueur);
 
                 if (precedent == NULL) {
                     *roulotte = courant->suivant;
@@ -1224,15 +1226,12 @@ void chargerJeu(const char* nomFichier, int* victoire, int* niveau, int* or_joue
     char ligne[256];
     while (fgets(ligne, sizeof(ligne), fichier)) {
 
-        // Chargement de la victoire
         if (sscanf(ligne, "Victoire: %d", victoire) != 1)
             printf("Erreur lors de la lecture de la victoire (ligne: %s).\n", ligne);
 
-        // Chargement du niveau
         if (sscanf(ligne, "Niveau: %d", niveau) != 1)
             printf("Erreur lors de la lecture du niveau (ligne: %s).\n", ligne);
 
-        // Chargement de l'or du joueur
         if (sscanf(ligne, "Or: %d", or_joueur) != 1)
             printf("Erreur lors de la lecture de l'or du joueur (ligne: %s).\n", ligne);
 
@@ -1241,7 +1240,7 @@ void chargerJeu(const char* nomFichier, int* victoire, int* niveau, int* or_joue
             while (fgets(ligne, sizeof(ligne), fichier) && ligne[0] == '-') {
                 Personnage perso;
                 if (sscanf(ligne, "- ID: %d, Nom: %[^,], Classe: %[^,], Att: %d, Def: %d, HP: %d, HPmax: %d, Rest: %d, Str: %d, Comb: %d, Acc1: %d, Acc2: %d",
-                    &perso.num, perso.nom, perso.classe, &perso.att, &perso.def, &perso.HP, &perso.HPmax, &perso.rest, &perso.str, &perso.nbcomb, &perso.acc_1, &perso.acc_2) == 12) {
+                    &perso.num, perso.nom, perso.classe, &perso.att, &perso.def, &perso.HP, &perso.HPmax, &perso.rest, &perso.str, &perso.nbcomb, &perso.acc_1->nom, &perso.acc_2->nom) == 12) {
                     ajoutPerso(dispoPerso, perso);
                 } else {
                     printf("Erreur de format dans la ligne des personnages disponibles : %s\n", ligne);
@@ -1320,7 +1319,7 @@ int main() {
 
     int nbcombat = 0;
 
-    // innitialisation des listes chaines
+    // innitialisation des listes chainéess
     ListePerso dispoPerso = NULL;
     ListeCombattant listeC = NULL;
     ListeAcc dispoAcc = NULL;
@@ -1475,10 +1474,10 @@ int main() {
                 fclose(fichierTest);
                 break;
             } else {
-                printf("Erreur : Impossible d'ouvrir le fichier %s pour l'écriture. Essayez encore.\n", nomFichier);
+                printf("Erreur : Impossible d'ouvrir le fichier %s pour l'écriture.\n", nomFichier);
             }
         } else {
-            printf("Nom de fichier invalide. Essayez encore.\n");
+            printf("Nom de fichier invalide.\n");
         }
     }
 
