@@ -78,6 +78,17 @@ typedef struct celluleRoulotte {
 } celluleRoulotte, *ListeRoulotte;
 
 Classe creerClasse(const char* nom, int att, int def, int HPmax, int rest) {
+    /**
+     * @brief Crée une nouvelle classe avec les caractéristiques spécifiées.
+     * 
+     * @param nom Le nom de la classe. La chaîne de caractères est copiée dans la structure.
+     * @param att La valeur de l'attaque de la classe.
+     * @param def La valeur de la défense de la classe.
+     * @param HPmax La valeur maximale des points de vie de la classe.
+     * @param rest La valeur de la récupération de la classe (points de récupération de vie, par exemple).
+     * 
+     * @return Une nouvelle instance de `Classe` avec les attributs initialisés.
+     */
     Classe c;
     strcpy(c.nom, nom);
     c.att = att;
@@ -87,7 +98,22 @@ Classe creerClasse(const char* nom, int att, int def, int HPmax, int rest) {
     return c;
 }
 
-Accessoire creerAccessoire(int num, const char* nom, const char* attbonus, const char* defbonus, const char* HPbonus, const char* restbonus, int strred, int prix) {
+Accessoire creerAccessoire(int num, const char* nom, const char* attbonus, const char* defbonus, 
+                            const char* HPbonus, const char* restbonus, int strred, int prix) {
+    /**
+     * @brief Crée un nouvel accessoire avec les caractéristiques spécifiées.
+     * 
+     * @param num Le numéro de l'accessoire, utilisé pour l'identifier.
+     * @param nom Le nom de l'accessoire.
+     * @param attbonus Le bonus d'attaque de l'accessoire.
+     * @param defbonus Le bonus de défense de l'accessoire.
+     * @param HPbonus Le bonus de points de vie de l'accessoire.
+     * @param restbonus Le bonus de récupération de l'accessoire.
+     * @param strred La réduction de force que l'accessoire applique.
+     * @param prix Le prix de l'accessoire.
+     * 
+     * @return Une nouvelle instance de `Accessoire` avec les attributs initialisés.
+     */
     Accessoire acc;
     acc.num = num;
     strcpy(acc.nom, nom);
@@ -191,6 +217,17 @@ Accessoire* retirerAcc(ListeAcc* liste, int id) {
 
 
 Personnage creerPersonnage(int num, const char* nom, Classe classe, Accessoire* acc1, Accessoire* acc2) {
+    /**
+     * @brief Crée un nouveau personnage avec les caractéristiques spécifiées.
+     * 
+     * @param num Le numéro unique du personnage.
+     * @param nom Le nom du personnage.
+     * @param classe La classe associée au personnage, qui définit ses attributs de base (attaque, défense, points de vie, etc.).
+     * @param acc1 Pointeur vers le premier accessoire équipé par le personnage, ou `NULL` s'il n'y en a pas.
+     * @param acc2 Pointeur vers le deuxième accessoire équipé par le personnage, ou `NULL` s'il n'y en a pas.
+     * 
+     * @return Une nouvelle instance de `Personnage` avec les attributs initialisés selon la classe et les accessoires fournis.
+     */
     Personnage perso;
     perso.num = num;
     strcpy(perso.nom, nom);
@@ -329,6 +366,18 @@ void afficherCombattants(ListeCombattant listeC) {
 
 
 Ennemi creerEnnemi(const char* nom, int niveau, int attenn, int defenn, int HPenn, int attstrenn) {
+    /**
+     * @brief Crée un nouvel ennemi avec les caractéristiques spécifiées.
+     * 
+     * @param nom Le nom de l'ennemi.
+     * @param niveau Le niveau de l'ennemi, influençant sa puissance globale.
+     * @param attenn L'attaque de l'ennemi, définissant ses dégâts infligés.
+     * @param defenn La défense de l'ennemi, influençant la réduction des dégâts subis.
+     * @param HPenn Les points de vie maximum de l'ennemi.
+     * @param attstrenn L'attaque spéciale de l'ennemi, représentant des capacités spéciales.
+     * 
+     * @return Une nouvelle instance d'`Ennemi` avec les attributs initialisés.
+     */
     Ennemi enn;
     strcpy(enn.nom, nom);
     enn.niveau = niveau;
@@ -1239,8 +1288,8 @@ void chargerJeu(const char* nomFichier, int* victoire, int* niveau, int* or_joue
         if (strncmp(ligne, "PersonnagesDisponibles:", 23) == 0) {
             while (fgets(ligne, sizeof(ligne), fichier) && ligne[0] == '-') {
                 Personnage perso;
-                if (sscanf(ligne, "- ID: %d, Nom: %[^,], Classe: %[^,], Att: %d, Def: %d, HP: %d, HPmax: %d, Rest: %d, Str: %d, Comb: %d, Acc1: %d, Acc2: %d",
-                    &perso.num, perso.nom, perso.classe, &perso.att, &perso.def, &perso.HP, &perso.HPmax, &perso.rest, &perso.str, &perso.nbcomb, &perso.acc_1->nom, &perso.acc_2->nom) == 12) {
+                if (sscanf(ligne, "- ID: %d, Nom: %[^,], Classe: %[^,], Att: %d, Def: %d, HP: %d, HPmax: %d, Rest: %d, Str: %d, Comb: %d, Acc1: %s, Acc2: %s",
+                    &perso.num, perso.nom, perso.classe, &perso.att, &perso.def, &perso.HP, &perso.HPmax, &perso.rest, &perso.str, &perso.nbcomb, perso.acc_1->nom, perso.acc_2->nom) == 12) {
                     ajoutPerso(dispoPerso, perso);
                 } else {
                     printf("Erreur de format dans la ligne des personnages disponibles : %s\n", ligne);
