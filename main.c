@@ -825,6 +825,11 @@ void afficherTaverne(Personnage perso) {
 }
 
 void taverne_affichage(ListeTaverne liste) {
+    /**
+     * @brief Affiche la liste des personnages présents dans la Taverne (fonction d'affichage principale).
+     * 
+     * @param liste La liste des personnages présents dans la Taverne.
+     */
     celluleTaverne* courant = liste;
     while (courant != NULL) {
         afficherTaverne(courant->perso);
@@ -833,6 +838,13 @@ void taverne_affichage(ListeTaverne liste) {
 }
 
 void ajoutTaverne(ListeTaverne* liste, ListePerso* dispo, Personnage perso) {
+    /**
+     * @brief Ajoute un personnage à la Taverne et le retire de la liste des personnages disponibles.
+     * 
+     * @param liste La liste de la Taverne dans laquelle le personnage sera ajouté.
+     * @param dispo La liste des personnages disponibles, à partir de laquelle le personnage sera retiré.
+     * @param perso Le personnage à ajouter à la Taverne.
+     */
     celluleTaverne* tmp = (celluleTaverne*)malloc(sizeof(celluleTaverne));
     if (tmp != NULL) {
         tmp->perso = perso;
@@ -847,6 +859,11 @@ void ajoutTaverne(ListeTaverne* liste, ListePerso* dispo, Personnage perso) {
 
 
 void recupererationStress(ListeTaverne* liste) {
+    /**
+     * @brief Réduit le stress des personnages à chaque tour, dans la Taverne.
+     * 
+     * @param liste La liste de la Taverne contenant les personnages dont le stress sera réduit.
+     */
     celluleTaverne* courant = *liste;
     while (courant != NULL) {
         courant->perso.str -= 25;
@@ -859,6 +876,12 @@ void recupererationStress(ListeTaverne* liste) {
 
 
 void retirerTaverne(ListeTaverne* taverne, ListePerso* dispoPerso) {
+    /**
+     * @brief Permet de retirer des personnages de la Taverne et de les réintégrer dans la liste des personnages disponibles.
+     * 
+     * @param taverne La liste des personnages actuellement dans la Taverne.
+     * @param dispoPerso La liste des personnages disponibles, où seront ajoutés ceux retirés de la Taverne.
+     */
     celluleTaverne* courant = *taverne;
     celluleTaverne* precedent = NULL;
 
@@ -886,6 +909,12 @@ void retirerTaverne(ListeTaverne* taverne, ListePerso* dispoPerso) {
 }
 
 void ajouterlot(ListeRoulotte* roulotte, Accessoire acc) {
+    /**
+     * @brief Ajoute un l'accessoire en paramètre à la roulotte.
+     * 
+     * @param roulotte La liste des accessoires actuellement dans la roulotte.
+     * @param acc L'accessoire à ajouter à la roulotte.
+     */
     celluleRoulotte* nouveau = (celluleRoulotte*)malloc(sizeof(celluleRoulotte));
     if (nouveau != NULL) {
         nouveau->acc = acc;
@@ -895,6 +924,11 @@ void ajouterlot(ListeRoulotte* roulotte, Accessoire acc) {
 }
 
 void afficherLot(Accessoire acc) {
+    /**
+     * @brief Affiche les détails d'un accessoire dans la roulotte.
+     * 
+     * @param acc L'accessoire dont les détails doivent être affichés.
+     */
     printf("   <-%s->\n", acc.nom);
     printf("______________________________\n");
     printf(" num: %d\n", acc.num);
@@ -916,6 +950,11 @@ void afficherLot(Accessoire acc) {
 
 
 void afficherRoulotte(ListeRoulotte roulotte) {
+    /**
+     * @brief Affiche les détails de tous les accessoires dans la roulotte.
+     * 
+     * @param roulotte La liste des accessoires présents dans la roulotte.
+     */
     celluleRoulotte* courant = roulotte;
     while (courant != NULL) {
         afficherLot(courant->acc);
@@ -925,12 +964,17 @@ void afficherRoulotte(ListeRoulotte roulotte) {
 
 
 void retirerLot(ListeRoulotte* roulotte, ListeAcc* dispoAcc) {
+    /**
+     * @brief Retire un accessoire de la roulotte et l'ajoute à la liste des accessoires disponibles.
+     * 
+     * @param roulotte La liste des accessoires dans la roulotte.
+     * @param dispoAcc La liste des accessoires disponibles où l'accessoire retiré sera ajouté.
+     */
     if (*roulotte == NULL) return;
 
     celluleRoulotte* courant = *roulotte;
     *roulotte = courant->suivant;
 
-    // Crée une nouvelle celluleAcc pour dispoAcc
     celluleAcc* nouvelleCellule = (celluleAcc*)malloc(sizeof(celluleAcc));
     if (nouvelleCellule != NULL) {
         nouvelleCellule->acc = courant->acc;  // Copie de l'accessoire
@@ -938,10 +982,17 @@ void retirerLot(ListeRoulotte* roulotte, ListeAcc* dispoAcc) {
         *dispoAcc = nouvelleCellule;
     }
 
-    free(courant);  // Libère l'ancienne cellule de roulotte
+    free(courant);
 }
 
 void achat(ListeRoulotte* roulotte, ListeAcc* dispoAcc, int or_joueur) {
+    /**
+     * @brief Permet d'acheter un accessoire disponible dans la roulotte si le joueur a assez d'or.
+     *
+     * @param roulotte La liste des accessoires dans la roulotte.
+     * @param dispoAcc La liste des accessoires disponibles où l'accessoire acheté sera ajouté.
+     * @param or_joueur Le montant actuel d'or du joueur, mis à jour après l'achat.
+     */
     if (*roulotte == NULL) {
         printf("La roulotte est vide. Aucun achat possible.\n");
         return;
@@ -1007,6 +1058,20 @@ void achat(ListeRoulotte* roulotte, ListeAcc* dispoAcc, int or_joueur) {
 int phaseAvantCombat(ListeSanitarium* sanitarium, ListeTaverne* taverne,
                       ListePerso* dispo, ListeRoulotte* roulotte,
                       ListeAcc* dispoAcc, int or_joueur, int quitter) {
+    
+    /**
+     * @brief phase de préparation avant le combat, gestion sanitarium/taverne/roulotte.
+     *
+     * @param sanitarium La liste des personnages dans le sanitarium.
+     * @param taverne La liste des personnages dans la taverne.
+     * @param dispo La liste des personnages disponibles pour le combat.
+     * @param roulotte La liste des accessoires dans la roulotte.
+     * @param dispoAcc La liste des accessoires disponibles.
+     * @param or_joueur Le montant actuel d'or du joueur.
+     * @param quitter La variable qui indique si le joueur souhaite quitter la partie (1 pour quitter, 0 pour continuer).
+     *
+     * @return 1 si le joueur quitte la partie, sinon 0.
+     */
 
     char choix;
 
@@ -1043,6 +1108,22 @@ int phaseAvantCombat(ListeSanitarium* sanitarium, ListeTaverne* taverne,
 void sauvegarderJeu(const char* nomFichier, int* victoire, int* niveau, int* or_joueur,
                     ListePerso dispoPerso, ListeSanitarium sanitarium, ListeTaverne taverne,
                     ListeAcc dispoAcc, ListeRoulotte roulotte) {
+
+    /**
+     * @brief Sauvegarde l'état actuel du jeu dans un fichier.
+     *
+     * @param nomFichier Le nom du fichier dans lequel les données du jeu seront sauvegardées.
+     * @param victoire Un pointeur vers la variable qui indique si le joueur a gagné.
+     * @param niveau Un pointeur vers la variable qui représente le niveau actuel du joueur.
+     * @param or_joueur Un pointeur vers la variable qui contient le nombre d'or du joueur.
+     * @param dispoPerso La liste des personnages disponibles pour le combat.
+     * @param sanitarium La liste des personnages actuellement dans le sanitarium.
+     * @param taverne La liste des personnages actuellement à la taverne.
+     * @param dispoAcc La liste des accessoires disponibles pour le joueur.
+     * @param roulotte La liste des accessoires actuellement dans la roulotte.
+     *
+     * @return void
+     */
 
     FILE* fichier = fopen(nomFichier, "w");
     if (!fichier) {
@@ -1117,6 +1198,22 @@ void sauvegarderJeu(const char* nomFichier, int* victoire, int* niveau, int* or_
 void chargerJeu(const char* nomFichier, int* victoire, int* niveau, int* or_joueur,
                 ListePerso* dispoPerso, ListeSanitarium* sanitarium, ListeTaverne* taverne,
                 ListeAcc* dispoAcc, ListeRoulotte* roulotte) {
+
+    /**
+     * @brief Charge l'état du jeu depuis un fichier de sauvegarde.
+     *
+     * @param nomFichier Le nom du fichier de sauvegarde à charger.
+     * @param victoire Un pointeur vers la variable qui sera mise à jour avec la valeur de la victoire chargée depuis le fichier.
+     * @param niveau Un pointeur vers la variable qui sera mise à jour avec le niveau du joueur chargé depuis le fichier.
+     * @param or_joueur Un pointeur vers la variable qui sera mise à jour avec le nombre d'or du joueur chargé depuis le fichier.
+     * @param dispoPerso Pointeur vers la liste des personnages disponibles, qui sera mise à jour avec les personnages chargés depuis le fichier.
+     * @param sanitarium Pointeur vers la liste des personnages dans le sanitarium, qui sera mise à jour avec les personnages chargés depuis le fichier.
+     * @param taverne Pointeur vers la liste des personnages à la taverne, qui sera mise à jour avec les personnages chargés depuis le fichier.
+     * @param dispoAcc Pointeur vers la liste des accessoires disponibles, qui sera mise à jour avec les accessoires chargés depuis le fichier.
+     * @param roulotte Pointeur vers la liste des accessoires dans la roulotte, qui sera mise à jour avec les accessoires chargés depuis le fichier.
+     *
+     * @return void
+     */
 
     FILE* fichier = fopen(nomFichier, "r");
     if (!fichier) {
