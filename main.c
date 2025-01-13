@@ -542,7 +542,7 @@ int MiseEnPlaceCombat(ListePerso listeP, ListeCombattant* listeC, int nbCombats,
         nbSelectionnes++;
     }
 
-    attribuerAccessoires(*dispoAcc, listeC);
+    attribuerAccessoires(*dispoAcc, *listeC);
 
     printf("Combat préparé avec les combattants suivants :\n");
     printf("\n");
@@ -606,7 +606,7 @@ void afficherSanitarium(Personnage perso) {
 }
 
 
-void Sanitarium(ListeSanitarium liste) {
+void sanitarium_affichage(ListeSanitarium liste) {
     celluleSanitarium* courant = liste;
     while (courant != NULL) {
         afficherSanitarium(courant->perso);
@@ -669,7 +669,7 @@ void afficherTaverne(Personnage perso) {
     printf("\n");
 }
 
-void taverne(ListeTaverne liste) {
+void taverne_affichage(ListeTaverne liste) {
     celluleTaverne* courant = liste;
     while (courant != NULL) {
         afficherTaverne(courant->perso);
@@ -866,13 +866,13 @@ int phaseAvantCombat(ListeSanitarium* sanitarium, ListeTaverne* taverne,
 
     if (*sanitarium != NULL) {
         printf("\n--- Gestion du sanitarium ---\n");
-        afficherSanitarium(*sanitarium);
+        sanitarium_affichage(*sanitarium);
         retirerDuSanitarium(sanitarium, dispo);
     }
 
     if (*taverne != NULL) {
         printf("\n--- Gestion de la taverne ---\n");
-        afficherTaverne(*taverne);
+        taverne_affichage(*taverne);
         retirerTaverne(taverne, dispo);
     }
 
