@@ -140,7 +140,7 @@ void afficherDispoAcc(ListeAcc liste) {
 Accessoire* retirerAcc(ListeAcc* liste, int id) {
     ListeAcc courant = *liste;
     ListeAcc precedent = NULL;
-    
+
     while (courant != NULL) {
         if (courant->acc.num == id) {
             if (precedent == NULL) {
@@ -169,7 +169,7 @@ Personnage creerPersonnage(int num, const char* nom, Classe classe, Accessoire* 
     perso.rest = classe.rest;
     perso.str = 0;
     perso.nbcomb = 0;
-    perso.acc_1 = acc1; 
+    perso.acc_1 = acc1;
     perso.acc_2 = acc2;
     return perso;
 }
@@ -286,7 +286,7 @@ void actionsPerso(ListeCombattant listeC, Ennemi* enn) {
     while (courant != NULL) {
         printf("Action de %s, A : Attaque, D : Defendre, R : Restaurer. ", courant->perso.nom);
         char action;
-        scanf(" %c", &action); 
+        scanf(" %c", &action);
 
         int bonusAttaque = 0, bonusDefense = 0, bonusRestauration = 0;
 
@@ -305,14 +305,14 @@ void actionsPerso(ListeCombattant listeC, Ennemi* enn) {
         if (action == 'A') {
 
             int attTotal = courant->perso.att + bonusAttaque;
-            float roll = 0.8 + ((float)rand() / (float)RAND_MAX) * (1.2 - 0.8); 
+            float roll = 0.8 + ((float)rand() / (float)RAND_MAX) * (1.2 - 0.8);
             int dommages = attTotal > enn->defenn ? (attTotal - enn->defenn) * roll : 1;
 
             enn->HPenn -= dommages;
             printf("%s attaque et inflige %d dégâts. %s a %d HP restants.\n", courant->perso.nom, dommages, enn->nom, enn->HPenn);
 
         } else if (action == 'D') {
-            courant->perso.def += courant->perso.def * 0.1; 
+            courant->perso.def += courant->perso.def * 0.1;
             printf("%s défend. Défense augmentée pour ce tour.\n", courant->perso.nom);
 
         } else if (action == 'R') {
@@ -375,24 +375,33 @@ void actionEnn(ListeCombattant listeC, Ennemi* enn) {
     }
 }
 
+void incrementerNbCombats(ListeCombattant listeC) {
+    celluleCombattant* courant = listeC;
+    while (courant != NULL) {
+        courant->perso.nbcomb++;
+        courant = courant->suivant;
+    }
+}
+
 int combat(ListeCombattant* listeC, Ennemi* enn) {
 
-    srand(time(NULL)); 
-    int tour = rand() % 2; 
+    srand(time(NULL));
+    int tour = rand() % 2;
 
     while (enn->HPenn > 0 && *listeC != NULL) {
         if (tour == 0) {
             printf("\n--- Tour des Personnages ---\n");
             actionsPerso(*listeC, enn);
-            tour = 1; 
+            tour = 1;
         } else {
             printf("\n--- Tour de l'Ennemi ---\n");
             actionEnn(*listeC, enn);
-            tour = 0; 
+            tour = 0;
         }
 
         if (enn->HPenn <= 0) {
             printf("L'ennemi %s a été vaincu !\n", enn->nom);
+            incrementerNbCombats(*listeC);
             return 1;
         }
 
@@ -417,6 +426,66 @@ int combat(ListeCombattant* listeC, Ennemi* enn) {
     if (*listeC == NULL) {
         printf("Tous vos personnages ont été vaincus. Défaite...\n");
         return 0;
+    }
+}
+
+
+void attribuerAccessoires(ListeAcc dispoAcc, ListeCombattant listeCombattants) {
+    printf("\nPhase de préparation :\n");
+    printf("Vous pouvez attribuer des accessoires aux personnages suivants :\n");
+
+    // Afficher les combattants disponibles
+    int nbCombattants = 0;
+    ListeCombattant temp = listeCombattants;
+    while (temp != NULL) {
+        printf("%d. %s\n", nbCombattants + 1, temp->perso.nom);
+        temp = temp->suivant;
+        nbCombattants++;
+    }
+
+    printf("\nVoici les accessoires disponibles :\n");
+    afficherDispoAcc(dispoAcc);
+
+    // Répartition des accessoires (jusqu'à nbCombattants * 2)
+    for (int i = 0; i < nbCombattants * 2; i++) {
+        int choixAccessoire, choixPersonnage;
+
+        printf("\nChoisissez un accessoire (entrez le numéro de l'accessoire) : ");
+        scanf("%d", &choixAccessoire);
+
+        printf("A quel personnage souhaitez-vous l'attribuer ? (entrez le numéro correspondant) : ");
+        scanf("%d", &choixPersonnage);
+
+        // Retirer l'accessoire sélectionné de la liste des accessoires
+        Accessoire* accessoireSelectionne = retirerAcc(&dispoAcc, choixAccessoire);
+
+        if (accessoireSelectionne != NULL) {
+            // Trouver le personnage sélectionné dans la liste des combattants
+            ListeCombattant cible = listeCombattants;
+            for (int j = 1; j < choixPersonnage && cible != NULL; j++) {
+                cible = cible->suivant;
+            }
+
+            if (cible != NULL) {
+                Personnage* persoCible = &(cible->perso);
+
+                if (persoCible->acc_1 == NULL) {
+                    persoCible->acc_1 = accessoireSelectionne;
+                    persoCible->HP += atoi(accessoireSelectionne->HPbonus);
+                    persoCible->HPmax += atoi(accessoireSelectionne->HPbonus);
+                } else if (persoCible->acc_2 == NULL) {
+                    persoCible->acc_2 = accessoireSelectionne;
+                    persoCible->HP += atoi(accessoireSelectionne->HPbonus);
+                    persoCible->HPmax += atoi(accessoireSelectionne->HPbonus);
+                } else {
+                    printf("Le personnage %s a déjà 2 accessoires attribués.\n", persoCible->nom);
+                }
+            } else {
+                printf("Personnage invalide. Réessayez.\n");
+            }
+        } else {
+            printf("Accessoire non trouvé. Réessayez.\n");
+        }
     }
 }
 
@@ -456,7 +525,7 @@ int MiseEnPlaceCombat(ListePerso listeP, ListeCombattant* listeC, int nbCombats,
             if (courant->perso.num == numero) {
                 if (indiceDejaSelectionne(indicesSelectionnes, nbSelectionnes, numero)) {
                     printf("Ce personnage est déjà sélectionné. Veuillez en choisir un autre.\n");
-                    courant = NULL; 
+                    courant = NULL;
                 }
                 break;
             }
@@ -473,7 +542,7 @@ int MiseEnPlaceCombat(ListePerso listeP, ListeCombattant* listeC, int nbCombats,
         nbSelectionnes++;
     }
 
-    attribuerAccessoires(&dispoAcc, 1, 2);
+    attribuerAccessoires(*dispoAcc, listeC);
 
     printf("Combat préparé avec les combattants suivants :\n");
     printf("\n");
@@ -509,23 +578,40 @@ void recupererationHP(ListeSanitarium* liste) {
 }
 
 
-void afficherSanitarium(ListeSanitarium liste) {
-    int index = 1;
-    celluleSanitarium* courant = liste;
+void afficherSanitarium(Personnage perso) {
+    printf("          <-%s->\n", perso.nom);
+    printf("______________________________\n");
+    printf(" num: %d\n", perso.num);
+    printf("------------------------------\n");
+    printf(" Classe: %s\n", perso.classe);
+    printf("------------------------------\n");
+    printf(" att: %d\n", perso.att);
+    printf("------------------------------\n");
+    printf(" def: %d\n", perso.def);
+    printf("------------------------------\n");
+    printf(" HP/HPmax: %d/%d\n", perso.HP, perso.HPmax);
+    printf("------------------------------\n");
+    printf(" rest: %d\n", perso.rest);
+    printf("------------------------------\n");
+    printf(" str: %d\n", perso.str);
+    printf("------------------------------\n");
+    printf(" nbcomb: %d\n", perso.nbcomb);
+    printf("------------------------------\n");
+    printf(" acc 1: %s\n", perso.acc_1 == NULL ? "Aucun" : perso.acc_1->nom);
+    printf("------------------------------\n");
+    printf(" acc 2: %s\n", perso.acc_2 == NULL ? "Aucun" : perso.acc_2->nom);
+    printf("______________________________\n");
+    printf("\n");
+    printf("\n");
+}
 
-    printf("Sanitarium\n");
-    printf("-------------------------------------------------\n");
-    printf(" N° | Nom      | Classe          | att | def | HP/HPmax | rest | str \n");
-    printf("-------------------------------------------------\n");
+
+void Sanitarium(ListeSanitarium liste) {
+    celluleSanitarium* courant = liste;
     while (courant != NULL) {
-        printf(" %2d | %-8s | %-15s | %-3d | %-3d | %-8d/%-8d | %-4d | %-3d\n",
-               index, courant->perso.nom, courant->perso.classe, courant->perso.att,
-               courant->perso.def, courant->perso.HP, courant->perso.HPmax,
-               courant->perso.rest, courant->perso.str);
+        afficherSanitarium(courant->perso);
         courant = courant->suivant;
-        index++;
     }
-    printf("-------------------------------------------------\n");
 }
 
 
@@ -556,23 +642,39 @@ void retirerDuSanitarium(ListeSanitarium* sanitarium, ListePerso* dispoPerso) {
     }
 }
 
-void afficherTaverne(ListeTaverne liste) {
-    int index = 1;
-    celluleTaverne* courant = liste;
+void afficherTaverne(Personnage perso) {
+    printf("          <-%s->\n", perso.nom);
+    printf("______________________________\n");
+    printf(" num: %d\n", perso.num);
+    printf("------------------------------\n");
+    printf(" Classe: %s\n", perso.classe);
+    printf("------------------------------\n");
+    printf(" att: %d\n", perso.att);
+    printf("------------------------------\n");
+    printf(" def: %d\n", perso.def);
+    printf("------------------------------\n");
+    printf(" HP/HPmax: %d/%d\n", perso.HP, perso.HPmax);
+    printf("------------------------------\n");
+    printf(" rest: %d\n", perso.rest);
+    printf("------------------------------\n");
+    printf(" str: %d\n", perso.str);
+    printf("------------------------------\n");
+    printf(" nbcomb: %d\n", perso.nbcomb);
+    printf("------------------------------\n");
+    printf(" acc 1: %s\n", perso.acc_1 == NULL ? "Aucun" : perso.acc_1->nom);
+    printf("------------------------------\n");
+    printf(" acc 2: %s\n", perso.acc_2 == NULL ? "Aucun" : perso.acc_2->nom);
+    printf("______________________________\n");
+    printf("\n");
+    printf("\n");
+}
 
-    printf("Taverne\n");
-    printf("-------------------------------------------------\n");
-    printf(" N° | Nom      | Classe          | att | def | HP/HPmax | rest | str \n");
-    printf("-------------------------------------------------\n");
+void taverne(ListeTaverne liste) {
+    celluleTaverne* courant = liste;
     while (courant != NULL) {
-        printf(" %2d | %-8s | %-15s | %-3d | %-3d | %-8d/%-8d | %-4d | %-3d\n",
-               index, courant->perso.nom, courant->perso.classe, courant->perso.att,
-               courant->perso.def, courant->perso.HP, courant->perso.HPmax,
-               courant->perso.rest, courant->perso.str);
+        afficherTaverne(courant->perso);
         courant = courant->suivant;
-        index++;
     }
-    printf("-------------------------------------------------\n");
 }
 
 void ajoutTaverne(ListeTaverne* liste, ListePerso* dispo, Personnage perso) {
@@ -692,7 +794,7 @@ void achat(ListeRoulotte* roulotte, ListeAcc* dispoAcc, int or_joueur) {
 
     char entree[10];
     printf("Votre or actuel : %d\n", or_joueur);
-    afficherRoulotte(*roulotte); 
+    afficherRoulotte(*roulotte);
 
     printf("Entrez le numéro de l'accessoire à acheter ou 'Q' pour quitter : ");
     scanf("%s", entree);
@@ -714,7 +816,7 @@ void achat(ListeRoulotte* roulotte, ListeAcc* dispoAcc, int or_joueur) {
     while (courant != NULL) {
         if (courant->acc.num == choix) {
             if (or_joueur >= courant->acc.prix) {
-                or_joueur -= courant->acc.prix; 
+                or_joueur -= courant->acc.prix;
                 printf("Vous avez acheté : %s pour %d or.\n", courant->acc.nom, courant->acc.prix);
 
                 if (precedent == NULL) {
@@ -730,7 +832,7 @@ void achat(ListeRoulotte* roulotte, ListeAcc* dispoAcc, int or_joueur) {
                     nouvelleCellule->suivant = *dispoAcc;
                     *dispoAcc = nouvelleCellule;
                 }
-                
+
                 free(courant);  // Libère l'ancienne cellule de roulotte
                 return;
 
@@ -783,56 +885,10 @@ int phaseAvantCombat(ListeSanitarium* sanitarium, ListeTaverne* taverne,
 }
 
 
-void attribuerAccessoires(ListeAcc* dispoAcc, Personnage* perso1, Personnage* perso2) {
-    printf("\nPhase de préparation :\n");
-    printf("Vous pouvez attribuer jusqu'à 2 accessoires aux deux personnages suivants :\n");
-
-    printf("1. %s\n", perso1->nom);
-    printf("2. %s\n\n", perso2->nom);
-    printf("Voici les accessoires disponibles :\n");
-
-    afficherDispoAcc(*dispoAcc);
-
-    for (int i = 0; i < 2; i++) {
-        int choixAccessoire, choixPersonnage;
-
-        printf("\nChoisissez un accessoire (entrez le numéro de l'accessoire) : ");
-        scanf("%d", &choixAccessoire);
-
-        printf("A quel personnage souhaitez-vous l'attribuer ? (1: %s, 2: %s) : ", perso1->nom, perso2->nom);
-        scanf("%d", &choixPersonnage);
-
-        Accessoire* accessoireSelectionne = retirerAcc(dispoAcc, choixAccessoire);
-
-        if (accessoireSelectionne != NULL) {
-            Personnage* persoCible = (choixPersonnage == 1) ? perso1 : (choixPersonnage == 2) ? perso2 : NULL;
-
-            if (persoCible != NULL) {
-                if (persoCible->acc_1 == NULL) {
-                    persoCible->acc_1 = accessoireSelectionne;
-                    persoCible->HP += atoi(accessoireSelectionne->HPbonus);
-                    persoCible->HPmax += atoi(accessoireSelectionne->HPbonus);
-                } else if (persoCible->acc_2 == NULL) {
-                    persoCible->acc_2 = accessoireSelectionne;
-                    persoCible->HP += atoi(accessoireSelectionne->HPbonus);
-                    persoCible->HPmax += atoi(accessoireSelectionne->HPbonus);
-                } else {
-                    printf("Le personnage %s a déjà 2 accessoires attribués.\n", persoCible->nom);
-                }
-            } else {
-                printf("Personnage invalide. Réessayez.\n");
-            }
-        } else {
-            printf("Accessoire non trouvé. Réessayez.\n");
-        }
-    }
-}
-
-
-void sauvegarderJeu(const char* nomFichier, int* victoire, int* niveau, int* nombreEnnemis, int* or_joueur, 
-                    ListePerso dispoPerso, ListeSanitarium sanitarium, ListeTaverne taverne, 
+void sauvegarderJeu(const char* nomFichier, int* victoire, int* niveau, int* or_joueur,
+                    ListePerso dispoPerso, ListeSanitarium sanitarium, ListeTaverne taverne,
                     ListeAcc dispoAcc, ListeRoulotte roulotte) {
-    
+
     FILE* fichier = fopen(nomFichier, "w");
     if (!fichier) {
         printf("Erreur : Impossible d'ouvrir le fichier %s pour l'écriture.\n", nomFichier);
@@ -842,16 +898,15 @@ void sauvegarderJeu(const char* nomFichier, int* victoire, int* niveau, int* nom
     // Sauvegarde des variables simples
     fprintf(fichier, "Victoire: %d\n", *victoire);
     fprintf(fichier, "Niveau: %d\n", *niveau);
-    fprintf(fichier, "NombreEnnemis: %d\n", *nombreEnnemis);
     fprintf(fichier, "Or: %d\n", *or_joueur);
 
     // Sauvegarde des personnages disponibles
     fprintf(fichier, "PersonnagesDisponibles:\n");
-    cellulePerso* perso = dispoPerso; 
+    cellulePerso* perso = dispoPerso;
     while (perso != NULL) {
         fprintf(fichier, "- ID: %d, Nom: %s, Classe: %s, Att: %d, Def: %d, HP: %d, HPmax: %d, Rest: %d, Str: %d, Comb: %d, Acc1: %p, Acc2: %p\n",
-                perso->perso.num, perso->perso.nom, perso->perso.classe, perso->perso.att, perso->perso.def, 
-                perso->perso.HP, perso->perso.HPmax, perso->perso.rest, perso->perso.str, perso->perso.nbcomb, 
+                perso->perso.num, perso->perso.nom, perso->perso.classe, perso->perso.att, perso->perso.def,
+                perso->perso.HP, perso->perso.HPmax, perso->perso.rest, perso->perso.str, perso->perso.nbcomb,
                 (void*)perso->perso.acc_1, (void*)perso->perso.acc_2);
         perso = perso->suivant;
     }
@@ -883,7 +938,7 @@ void sauvegarderJeu(const char* nomFichier, int* victoire, int* niveau, int* nom
     celluleAcc* acc = dispoAcc;
     while (acc != NULL) {
         fprintf(fichier, "- ID: %d, Nom: %s, AttBonus: %s, DefBonus: %s, HPBonus: %s, RestBonus: %s, StrRed: %d, Prix: %d\n",
-                acc->acc.num, acc->acc.nom, acc->acc.attbonus, acc->acc.defbonus, acc->acc.HPbonus, 
+                acc->acc.num, acc->acc.nom, acc->acc.attbonus, acc->acc.defbonus, acc->acc.HPbonus,
                 acc->acc.restbonus, acc->acc.strred, acc->acc.prix);
         acc = acc->suivant;
     }
@@ -893,7 +948,7 @@ void sauvegarderJeu(const char* nomFichier, int* victoire, int* niveau, int* nom
     celluleRoulotte* roul = roulotte;
     while (roul != NULL) {
         fprintf(fichier, "- ID: %d, Nom: %s, AttBonus: %s, DefBonus: %s, HPBonus: %s, RestBonus: %s, StrRed: %d, Prix: %d\n",
-                roul->acc.num, roul->acc.nom, roul->acc.attbonus, roul->acc.defbonus, roul->acc.HPbonus, 
+                roul->acc.num, roul->acc.nom, roul->acc.attbonus, roul->acc.defbonus, roul->acc.HPbonus,
                 roul->acc.restbonus, roul->acc.strred, roul->acc.prix);
         roul = roul->suivant;
     }
@@ -904,8 +959,8 @@ void sauvegarderJeu(const char* nomFichier, int* victoire, int* niveau, int* nom
 
 
 
-void chargerJeu(const char* nomFichier, int* victoire, int* niveau, int* nombreEnnemis, int* or_joueur, 
-                ListePerso* dispoPerso, ListeSanitarium* sanitarium, ListeTaverne* taverne, 
+void chargerJeu(const char* nomFichier, int* victoire, int* niveau, int* or_joueur,
+                ListePerso* dispoPerso, ListeSanitarium* sanitarium, ListeTaverne* taverne,
                 ListeAcc* dispoAcc, ListeRoulotte* roulotte) {
 
     FILE* fichier = fopen(nomFichier, "r");
@@ -918,19 +973,15 @@ void chargerJeu(const char* nomFichier, int* victoire, int* niveau, int* nombreE
     while (fgets(ligne, sizeof(ligne), fichier)) {
 
         // Chargement de la victoire
-        if (sscanf(ligne, "Victoire: %d", victoire) != 1) 
+        if (sscanf(ligne, "Victoire: %d", victoire) != 1)
             printf("Erreur lors de la lecture de la victoire (ligne: %s).\n", ligne);
 
         // Chargement du niveau
-        if (sscanf(ligne, "Niveau: %d", niveau) != 1) 
+        if (sscanf(ligne, "Niveau: %d", niveau) != 1)
             printf("Erreur lors de la lecture du niveau (ligne: %s).\n", ligne);
 
-        // Chargement du nombre d'ennemis
-        if (sscanf(ligne, "NombreEnnemis: %d", nombreEnnemis) != 1) 
-            printf("Erreur lors de la lecture du nombre d'ennemis (ligne: %s).\n", ligne);
-
         // Chargement de l'or du joueur
-        if (sscanf(ligne, "Or: %d", or_joueur) != 1) 
+        if (sscanf(ligne, "Or: %d", or_joueur) != 1)
             printf("Erreur lors de la lecture de l'or du joueur (ligne: %s).\n", ligne);
 
         // Lecture de la liste des personnages disponibles
@@ -1031,72 +1082,51 @@ int main() {
     int victoire = 0;
     int quitter = 0;
 
-    printf("Voulez-vous charger une sauvegarde ? (o/n) : ");
-    scanf(" %c", &choix);
-    if (choix == 'o') {
+    // création des classes
+    Classe classes[] = {
+        creerClasse("Furie", 13, 0, 20, 0),
+        creerClasse("Vestale", 3, 0, 20, 10),
+        creerClasse("Chasseur_de_primes", 7, 3, 25, 3),
+        creerClasse("Maître_chien", 10, 6, 17, 5)
+    };
 
-        char nomFichier[100];
-        printf("Entrez le nom du fichier de sauvegarde : ");
-        scanf("%s", nomFichier);
-        chargerJeu(nomFichier, &victoire, &niveau, &nombreEnnemis, &or_joueur, &dispoPerso, &sanitarium, &taverne, &dispoAcc, &roulotte);
-    }
-    else {
+    int nombreClasses = sizeof(classes) / sizeof(classes[0]);
+    int indicesSelectionnes[4]; // Tableau pour enregistrer les indices
+    int compteur = 0;
 
-        // création des classes
-        Classe classes[] = {
-            creerClasse("Furie", 13, 0, 20, 0),
-            creerClasse("Vestale", 3, 0, 20, 10),
-            creerClasse("Chasseur_de_primes", 7, 3, 25, 3),
-            creerClasse("Maître_chien", 10, 6, 17, 5)
-        };
-
-        int nombreClasses = sizeof(classes) / sizeof(classes[0]);
-        int indicesSelectionnes[4]; // Tableau pour enregistrer les indices
-        int compteur = 0;
-
-        while (compteur < 4) {
-            int nouvelIndice = rand() % nombreClasses;
-            if (!indiceDejaSelectionne(indicesSelectionnes, compteur, nouvelIndice)) {
-                indicesSelectionnes[compteur] = nouvelIndice;
-                compteur++;
-            }
+    while (compteur < 4) {
+        int nouvelIndice = rand() % nombreClasses;
+        if (!indiceDejaSelectionne(indicesSelectionnes, compteur, nouvelIndice)) {
+            indicesSelectionnes[compteur] = nouvelIndice;
+            compteur++;
         }
+    }
 
-        // création des accessoires
-        Accessoire pendentif_tranchant = creerAccessoire(1, "pendentif tranchant", "+5", "+1", "+0", "+0", 0, 7);
-        Accessoire calice_de_jeunesse = creerAccessoire(2, "calice de jeunesse", "+0", "+3", "+5", "+0", 5, 16);
-        Accessoire anneau_magique = creerAccessoire(3, "Anneau Magique", "+3", "+2", "+0", "+5", 10, 7);
-        Accessoire amulette_divine = creerAccessoire(4, "Amulette Divine", "+0", "+5", "+10", "+0", 15, 32);
-        Accessoire lame_du_roi_dechu = creerAccessoire(5, "Lame du Roi Déchu", "+8", "+2", "+0", "+3", 5, 20);
-        Accessoire egide_de_la_legion = creerAccessoire(6, "Égide de la Légion", "+0", "+6", "+10", "+0", 8, 15);
-        Accessoire danse_de_la_mort = creerAccessoire(7, "Danse de la Mort", "+12", "+0", "+0", "+5", 10, 25);
-        Accessoire cape_de_la_nuit = creerAccessoire(8, "Cape de la Nuit", "+0", "+4", "+0", "+7", 7, 18);
-        Accessoire cotte_epineuse = creerAccessoire(9, "Cotte Épineuse", "+0", "+10", "+20", "+0", 12, 30);
-        Accessoire gage_de_sterak = creerAccessoire(10, "Gage de Sterak", "+5", "+0", "+15", "+0", 6, 22);
-        Accessoire cimeterre_mercantile = creerAccessoire(11, "Cimeterre Mercuriel", "+10", "+2", "+0", "+0", 7, 26);
-        Accessoire heraut_de_zaun = creerAccessoire(12, "Héraut de Zaun", "+0", "+5", "+5", "+10", 8, 24);
-        Accessoire sablier_de_zhonya = creerAccessoire(13, "Sablier de Zhonya", "+0", "+7", "+0", "+15", 10, 28);
-        Accessoire arc_axiomatique = creerAccessoire(14, "Arc Axiomatique", "+15", "+0", "+0", "+0", 5, 19);
+    // création des accessoires
+    Accessoire pendentif_tranchant = creerAccessoire(1, "pendentif tranchant", "+5", "+1", "+0", "+0", 0, 7);
+    Accessoire calice_de_jeunesse = creerAccessoire(2, "calice de jeunesse", "+0", "+3", "+5", "+0", 5, 16);
+    Accessoire anneau_magique = creerAccessoire(3, "Anneau Magique", "+3", "+2", "+0", "+5", 10, 7);
+    Accessoire amulette_divine = creerAccessoire(4, "Amulette Divine", "+0", "+5", "+10", "+0", 15, 32);
+    Accessoire lame_du_roi_dechu = creerAccessoire(5, "Lame du Roi Déchu", "+8", "+2", "+0", "+3", 5, 20);
+    Accessoire egide_de_la_legion = creerAccessoire(6, "Égide de la Légion", "+0", "+6", "+10", "+0", 8, 15);
+    Accessoire danse_de_la_mort = creerAccessoire(7, "Danse de la Mort", "+12", "+0", "+0", "+5", 10, 25);
+    Accessoire cape_de_la_nuit = creerAccessoire(8, "Cape de la Nuit", "+0", "+4", "+0", "+7", 7, 18);
+    Accessoire cotte_epineuse = creerAccessoire(9, "Cotte Épineuse", "+0", "+10", "+20", "+0", 12, 30);
+    Accessoire gage_de_sterak = creerAccessoire(10, "Gage de Sterak", "+5", "+0", "+15", "+0", 6, 22);
+    Accessoire cimeterre_mercantile = creerAccessoire(11, "Cimeterre Mercuriel", "+10", "+2", "+0", "+0", 7, 26);
+    Accessoire heraut_de_zaun = creerAccessoire(12, "Héraut de Zaun", "+0", "+5", "+5", "+10", 8, 24);
+    Accessoire sablier_de_zhonya = creerAccessoire(13, "Sablier de Zhonya", "+0", "+7", "+0", "+15", 10, 28);
+    Accessoire arc_axiomatique = creerAccessoire(14, "Arc Axiomatique", "+15", "+0", "+0", "+0", 5, 19);
 
-        // création des personnages
-        Personnage Boudicca = creerPersonnage(1, "Boudicca", classes[indicesSelectionnes[0]], NULL, NULL);
-        Personnage Junia = creerPersonnage(2, "Junia", classes[indicesSelectionnes[1]], NULL, NULL);
+    // création des personnages
+    Personnage Boudicca = creerPersonnage(1, "Boudicca", classes[indicesSelectionnes[0]], NULL, NULL);
+    Personnage Junia = creerPersonnage(2, "Junia", classes[indicesSelectionnes[1]], NULL, NULL);
+    Personnage Flash = creerPersonnage(3, "Flash", classes[indicesSelectionnes[2]], NULL, NULL);
+    Personnage Gordi = creerPersonnage(4, "Gordi", classes[indicesSelectionnes[3]], NULL, NULL);
+    Personnage Ragnard = creerPersonnage(5, "Ragnard", classes[indicesSelectionnes[0]], NULL, NULL);
+    Personnage Tritus = creerPersonnage(6, "Tritus", classes[indicesSelectionnes[1]], NULL, NULL);
 
-        printf("\n");
-        printf("Accessoires disponibles:\n");
-        printf("\n");
-        afficherDispoAcc(dispoAcc);
-
-        ajoutPerso(&dispoPerso, Boudicca);
-        ajoutPerso(&dispoPerso, Junia);
-
-        ajoutAcc(&dispoAcc, pendentif_tranchant);
-        ajoutAcc(&dispoAcc, calice_de_jeunesse);
-
-        ajouterlot(&roulotte, anneau_magique);
-        ajouterlot(&roulotte, amulette_divine);
-
-        // Création des ennemis
+    // Création des ennemis
         Ennemi ennemis[] = {
             creerEnnemi("Brigand", 1, 2, 10, 10, 2),
             creerEnnemi("Squelette", 2, 3, 11, 15, 3),
@@ -1110,8 +1140,45 @@ int main() {
             creerEnnemi("Chevalier noir", 10, 15, 23, 60, 15)
         };
 
-        nombreEnnemis = sizeof(ennemis) / sizeof(ennemis[0]);
+    nombreEnnemis = sizeof(ennemis) / sizeof(ennemis[0]);
+
+    printf("Voulez-vous charger une sauvegarde ? (o/n) : ");
+    scanf(" %c", &choix);
+    if (choix == 'o') {
+
+        char nomFichier[100];
+        printf("Entrez le nom du fichier de sauvegarde : ");
+        scanf("%s", nomFichier);
+        chargerJeu(nomFichier, &victoire, &niveau, &or_joueur, &dispoPerso, &sanitarium, &taverne, &dispoAcc, &roulotte);
     }
+
+    else {
+
+        ajoutPerso(&dispoPerso, Boudicca);
+        ajoutPerso(&dispoPerso, Junia);
+
+        ajoutAcc(&dispoAcc, pendentif_tranchant);
+        ajoutAcc(&dispoAcc, calice_de_jeunesse);
+
+        ajouterlot(&roulotte, anneau_magique);
+        ajouterlot(&roulotte, amulette_divine);
+        ajouterlot(&roulotte, lame_du_roi_dechu);
+        ajouterlot(&roulotte, egide_de_la_legion);
+        ajouterlot(&roulotte, danse_de_la_mort);
+        ajouterlot(&roulotte, cape_de_la_nuit);
+        ajouterlot(&roulotte, cotte_epineuse);
+        ajouterlot(&roulotte, gage_de_sterak);
+        ajouterlot(&roulotte, cimeterre_mercantile);
+        ajouterlot(&roulotte, heraut_de_zaun);
+        ajouterlot(&roulotte, sablier_de_zhonya);
+        ajouterlot(&roulotte, arc_axiomatique);
+
+        };
+
+    printf("\n");
+    printf("Accessoires disponibles:\n");
+    printf("\n");
+    afficherDispoAcc(dispoAcc);
 
 
     while (victoire == 0 && niveau < nombreEnnemis && quitter != 1) {
@@ -1119,38 +1186,38 @@ int main() {
 
         int resultatCombat = MiseEnPlaceCombat(dispoPerso, &listeC, nbcombat, &ennemis[niveau], &dispoAcc);
 
-        if (resultatCombat == 0) { 
+        if (resultatCombat == 0) {
             printf("Vous avez perdu le combat contre %s. Le jeu est terminé.\n", ennemis[niveau].nom);
-            victoire = -1; 
+            victoire = -1;
             break;
         }
 
         printf("Félicitations ! Vous avez vaincu %s.\n", ennemis[niveau].nom);
-        niveau++; 
+        niveau++;
 
         if (niveau >= nombreEnnemis) {
             printf("Félicitations ! Vous avez vaincu tous les ennemis et gagné le jeu !\n");
-            victoire = 1; 
+            victoire = 1;
             break;
         }
 
         or_joueur += 10;
         quitter = phaseAvantCombat(&sanitarium, &taverne, &dispoPerso, &roulotte, &dispoAcc, or_joueur, quitter);
 
-        if (niveau == 2) ajoutPerso(&dispoPerso, creerPersonnage(3, "Flash", classes[indicesSelectionnes[2]], NULL, NULL));
-        if (niveau == 4) ajoutPerso(&dispoPerso, creerPersonnage(4, "Gordi", classes[indicesSelectionnes[3]], NULL, NULL));
-        if (niveau == 7) ajoutPerso(&dispoPerso, creerPersonnage(5, "Ragnard", classes[indicesSelectionnes[0]], NULL, NULL));
-        if (niveau == 8) ajoutPerso(&dispoPerso, creerPersonnage(6, "Tritus", classes[indicesSelectionnes[1]], NULL, NULL));
+        if (niveau == 2) ajoutPerso(&dispoPerso,Flash);
+        if (niveau == 4) ajoutPerso(&dispoPerso, Gordi);
+        if (niveau == 7) ajoutPerso(&dispoPerso,Ragnard);
+        if (niveau == 8) ajoutPerso(&dispoPerso, Tritus);
     }
 
     if (quitter == 1) {
     char nomFichier[100];
-    
+
     while (1) {
         printf("Entrez un nom de fichier pour sauvegarder la partie : ");
         scanf("%c", nomFichier);
         if (nomFichier[0] != '\0') {
-            
+
             FILE* fichierTest = fopen(nomFichier, "w");
             if (fichierTest != NULL) {
                 fclose(fichierTest);
@@ -1163,7 +1230,7 @@ int main() {
         }
     }
 
-    sauvegarderJeu(nomFichier, &victoire, &niveau, &nombreEnnemis, &or_joueur, &dispoPerso, &sanitarium, &taverne, &dispoAcc, &roulotte);
+    sauvegarderJeu(nomFichier, &victoire, &niveau, &or_joueur, dispoPerso, sanitarium, taverne, dispoAcc, roulotte);
 }
 
 }
